@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 1440 5000" style="padding: 20px;">
+  <g mask="url(&quot;#SvgjsMask1408&quot;)" fill="none">
+    <path d="M20 20L320 20 20 320z" fill="rgba(237, 0, 0, 0.4)" class="triangle-float1"></path>
+    <path d="M1120 20L1420 20 1420 320z" fill="rgba(237, 0, 0, 0.4)" class="triangle-float2"></path>
+    <path d="M20 4680L320 4880 20 4880z" fill="rgba(237, 0, 0, 0.4)" class="triangle-float3"></path>
+    <path d="M1120 4680L1420 4880 1420 4680z" fill="rgba(237, 0, 0, 0.4)" class="triangle-float4"></path>
+  </g>
+  <defs>
+    <mask id="SvgjsMask1408">
+      <rect width="100%" height="100%" fill="#ffffff"></rect>
+    </mask>
+    <style>
+      @keyframes float1 {
+         0%{transform: translate(-100%, -100%)}
+        50%{transform: translate(0, 0)}
+       100%{transform: translate(-100%, -100%)}
+      }
+      @keyframes float2 {
+         0%{transform: translate(100%, -100%)}
+        50%{transform: translate(0, 0)}
+       100%{transform: translate(100%, -100%)}
+      }
+      @keyframes float3 {
+         0%{transform: translate(-100%, 100%)}
+        50%{transform: translate(0, 0)}
+       100%{transform: translate(-100%, 100%)}
+      }
+      @keyframes float4 {
+         0%{transform: translate(100%, 100%)}
+        50%{transform: translate(0, 0)}
+       100%{transform: translate(100%, 100%)}
+      }
+      .triangle-float1 {
+        animation: float1 5s infinite;
+      }
+      .triangle-float2 {
+        animation: float2 4s infinite;
+      }
+      .triangle-float3 {
+        animation: float3 6s infinite;
+      }
+      .triangle-float4 {
+        animation: float4 7s infinite;
+      }
+    </style>
+  </defs>
+</svg>

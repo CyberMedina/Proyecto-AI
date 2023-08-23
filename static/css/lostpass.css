@@ -1,0 +1,233 @@
+.custom-card{
+  border-style:solid;
+}
+
+.lostpass{
+    font-size: small;
+  }
+  
+  .formlostpass{
+    display: flex;
+    justify-content: center;
+    margin-top: 2%;
+  }
+
+   .titulo-lostpass a{
+    font-size: 32px;
+    font-weight: 500;
+    text-decoration: none;
+    color: #000000;
+  }
+  
+    span{
+    color: #ff5757;
+  }
+
+  .custom-span{
+    color: #ffffff;
+  }
+
+.titulo-lostpass{
+  margin-top: 2rem;
+}
+
+.titulo-lostpass a img{
+    max-width: 50px;
+    margin-left: -10px;
+    margin-right: 5px;
+}
+
+/* Estilos para los inputs */
+/* Estilos para el campo de entrada de correo electrónico */
+.input-wrap {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.custom-input{
+  margin: 3rem 3rem 0 3rem;
+}
+
+.input-field {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  border-bottom: 1px solid #bbb;
+  padding: 0;
+  font-size: 0.95rem;
+  color: #151111;
+}
+
+.input-field:valid {
+  border-bottom-color: #ff5757;
+}
+
+.input-field ~ label {
+  position: absolute;
+  left: 0;
+  top: 40%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  color: #bbb;
+  pointer-events: none;
+  transition: 0.4s;
+}
+
+.input-field:required:valid + label {
+  top: -6px;
+  font-size:small;
+  color: #ff5757;
+}
+
+/* Estilos para el tooltip */
+.tooltip {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #DA5552; /* Color de fondo del tooltip */
+  color: #e3e3e3; /* Color del texto del tooltip */
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 14px;
+  display: none;
+  width: 100%;
+  font-size: 12px; /* Reducir el tamaño de fuente */
+  padding: 0.25rem 0.5rem; /* Reducir el padding */
+  top: auto; /* Cambiar la posición vertical a "auto" */
+  bottom: calc(100% + 0.5rem); /* Posicionar el tooltip debajo del campo de entrada */
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto; /* Permitir que el tooltip se ajuste al contenido */
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 6px 0 6px;
+  border-color: #DA5552 transparent transparent transparent;
+  bottom: -6px;
+  left: 50%;
+  transform: translate(-50%) rotate(0); /* Girar el triángulo a 0 grados */
+}
+
+
+  
+  
+  /* FIN del segmento para los inputs inicio sesion personalizados */
+
+/* Inicio estilos personalizados para animación botón */
+
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    background: #ff5757;
+    color: white;
+    padding: 0.7em 1em;
+    padding-left: 0.9em;
+    display: flex;
+    align-items: center;
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.2s;
+    font-weight: 600;
+    padding: 12px 30px;
+    border-radius: 30px;
+    
+  }
+  
+  button span {
+    display: block;
+    margin-left: 0.3em;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  button svg {
+    display: block;
+    transform-origin: center center;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  button:hover .svg-wrapper {
+    animation: fly-1 0.6s ease-in-out infinite alternate;
+  }
+  
+  button:hover svg {
+    transform: translateX(3.2em) rotate(45deg) scale(1.1);
+  }
+  
+  button:hover span {
+    transform: translateX(10em);
+  }
+  
+  button:active {
+    transform: scale(0.95);
+  }
+  
+  @keyframes fly-1 {
+    from {
+      transform: translateY(0.1em);
+    }
+  
+    to {
+      transform: translateY(-0.1em);
+    }
+  }
+
+/* Finaliza estilos personalizados para animación botón */
+
+/* Configuración del margin para dispositos moviles 450px */
+
+@media(max-width:450px){
+  .main-custom{
+    margin: 10%;
+  }
+
+  .custom-input{
+    margin: 3rem 1rem 0 1rem;
+  }
+
+
+}
+
+.custom-button{
+  display: flex;
+  justify-content: center;
+}
+
+/* Estilos para el margen */
+.row{
+
+}
+
+
+
+.row a{
+  color: #ff5757;
+  text-decoration: none;
+}
+
+.row a:hover{
+  color: #ff0000;
+  text-decoration:underline;
+}
+
+.body_card .body-card-button{
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.body-card-button button:hover{
+  background-color: #ff7373;
+}
+
+.body-card-button a{
+  text-decoration: none;
+  color: #ffffff;
+}

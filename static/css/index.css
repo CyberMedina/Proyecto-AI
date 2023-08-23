@@ -1,0 +1,350 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+/* @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@1,400;1,700&display=swap');
+ *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Open Sans', sans-serif;
+ } */
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    overflow-x: hidden;
+    background-image: url(../img/Animated\ Shape\ \(7\).svg);
+    background-attachment: fixed;
+    background-size: cover;
+    overflow-x: hidden;
+
+}
+
+/*======================*/
+/*==========Menu=========*/
+
+#menu li>a {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3f3f3f;
+}
+
+
+#menu form>button {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+
+/*======================*/
+/*==========Imagenes=========*/
+
+#local {
+    background-color: #f3f3f3;
+    padding-bottom: 300px;
+    display: flex;
+    justify-content: center;
+}
+
+.wrapper {
+    width: 50%;
+    margin-left: 100px;
+    padding-top: 150;
+}
+
+#map {
+    margin-top: 40px;
+    margin-left: 40px;
+    padding: 50px;
+}
+
+/*======================*/
+/*==========MEDIA QUERIES PANTALLA SM=========*/
+@media (max-width: 768px) {
+
+    body {
+        background-image: none;
+    }
+
+    #intro,
+    #equipo {
+        width: 90% !important;
+    }
+
+    #img-equipo {
+        max-height: 20rem !important;
+        width: 250px;
+    }
+
+    .mision-local {
+        width: 90%;
+        margin: auto;
+        padding-top: 50px;
+    }
+
+    #local {
+        flex-wrap: wrap;
+    }
+
+    .mapa img {
+        width: 100%;
+        height: auto;
+    }
+
+    .navbar-brand {
+        margin-left: 35px; /* Ajusta el valor según tus necesidades */
+      }
+
+    
+}
+
+/*======================*/
+/*==========MEDIA QUERIES PANTALLA ANCHA=========*/
+@media(max-width:1200px) {
+
+    #intro,
+    #equipo {
+        width: 90% !important;
+        margin: auto;
+    }
+
+    #local {
+        flex-wrap: wrap;
+        padding-top: 30px;
+    }
+
+    .wrapper {
+        width: 90%;
+        margin: auto;
+        padding-top: 50px;
+    }
+
+    .navbar-brand {
+        margin-left: 35px; /* Ajusta el valor según tus necesidades */
+      }
+}
+
+/*======================*/
+/*Extra SM==========MEDIA QUERIES PANTALLA SM=========*/
+@media (max-width: 576px) {
+    #servicios-fila-2 {
+        width: 100% !important;
+    }
+
+    #servicios-fila-1 {
+        width: 100% !important;
+    }
+
+    .icono-wrap {
+        flex-wrap: wrap;
+        justify-content: center !important;
+    }
+
+    .carousel-margen {
+        padding: 15px !important;
+        margin-left: 25px !important;
+        margin-right: 25px !important;
+    }
+
+    .ratio-margen {
+        padding: 15px !important;
+        margin-left: 25px !important;
+        margin-right: 25px !important;
+    }
+
+    #botonRegistrarse a {
+        font-size: 12px;
+    }
+
+    .navbar-brand img {
+        width: 90px;
+        /* Ajusta el ancho según tus necesidades */
+        height: 90px;
+        /* Ajusta la altura según tus necesidades */
+    }
+
+    .navbar-toggler-icon {
+        font-size: 14px;
+        /* Ajusta el tamaño del icono según tus necesidades */
+    }
+
+    
+    .navbar-brand {
+        margin-left: 35px; /* Ajusta el valor según tus necesidades */
+      }
+
+    
+
+      
+
+
+
+}
+
+/*======================*/
+
+
+/*==========SECCION NUESTRO EQUIPO MAPA=========*/
+#local {
+    margin-top: 50px;
+    background-color: #f3f3f3;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 300px;
+}
+
+#mapa {
+    /* background: url(../Img/Ubicacion.png); */
+    width: 100%;
+    height: 500px;
+}
+
+.wrapper-local {
+    width: 50%;
+    margin-left: 100px;
+    padding-top: 150px;
+}
+
+/*======================*/
+/*==========SECCION EQUIPO BARRIO RENE CISNERO=========*/
+#numeros-local {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#numero-local div {
+    padding: 0 20px 0 0;
+    text-align: left;
+    height: 48px;
+}
+
+#numeros-local div:not(:last-child) {
+    border-right: 2px solid #3f3f3f;
+}
+
+#numeros-local div:not(:first-child) {
+    padding-left: 20px;
+}
+
+#numeros-local p {
+    margin: 0;
+}
+
+.carousel-margen {
+    margin-left: 70px;
+    margin-right: 70px;
+}
+
+.carousel-margen {
+    margin-left: 70px;
+    margin-right: 70px;
+}
+
+.ratio-margen {
+    margin-left: 200px;
+    margin-right: 200px;
+}
+
+/* Pie de Página */
+.pie-pagina {
+    width: 100%;
+    background-color: #dc3545;
+}
+
+.pie-pagina .grupo-1 {
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 50px;
+    padding: 45px 0px;
+}
+
+.pie-pagina .grupo-1 .box figure {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pie-pagina .grupo-1 .box figure img {
+
+    width: 280px;
+}
+
+.pie-pagina .grupo-1 .box h2 {
+    color: #fff;
+    margin-bottom: 25px;
+    font-size: 20px;
+}
+
+.pie-pagina .grupo-1 .box p {
+    color: #efefef;
+    margin-bottom: 10px;
+}
+
+.pie-pagina .grupo-1 .red-social a {
+    display: inline-block;
+    text-decoration: none;
+    width: 45px;
+    height: 45px;
+    line-height: 45px;
+    color: #fff;
+    margin-right: 10px;
+    background-color: #e25967;
+    text-align: center;
+    transition: all 300ms ease;
+}
+
+.pie-pagina .grupo-1 .red-social a:hover {
+    color: #f8001d
+}
+
+.pie-pagina .grupo-2 {
+    background-color: #fc6272;
+    padding: 15px 10px;
+    text-align: center;
+    color: #fff;
+
+}
+
+.pie-pagina .grupo-2 small {
+    font-size: 15px;
+}
+
+@media screen and (max-width: 800px) {
+    .pie-pagina .grupo-1 {
+        width: 90%;
+        grid-template-columns: repeat(1, 1fr);
+        grid-gap: 30px;
+        padding: 35px 0px;
+    }
+
+
+}
+
+.pie-pagina .grupo-1 .Whatsapp a {
+    display: inline-block;
+    text-decoration: none;
+    width: 100px;
+    height: 45px;
+    line-height: 45px;
+    color: #fff;
+    margin-right: 10px;
+    background-color: #58eb58;
+    text-align: center;
+    transition: all 300ms ease;
+}
+
+
+.navbar-toggler-left {
+    order: -1;
+    /* Cambia el orden del Navbar Toggler para que aparezca primero en el flujo del documento */
+}
+
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
