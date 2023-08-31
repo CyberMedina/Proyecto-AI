@@ -138,6 +138,11 @@ def lostpass():
 
     return render_template('/auth/lostpass.html')
 
+@app.route('/calificar', methods=['GET', 'POST'])
+def calificar():
+    return render_template('/home.html', entrar=True)    
+
+
 # Logout
 @app.route('/Cerrar_Sesion')
 def logout():
@@ -150,7 +155,7 @@ def logout():
 
 # Ejecuta la aplicación Flask
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0')
     app.run()
 
 
