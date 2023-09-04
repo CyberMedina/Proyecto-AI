@@ -64,7 +64,7 @@ Session(app)
 # Route for the home page
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('/home.html')
+    return render_template('/index.html')
 
 # Ruta para el inicio de sesión y además abriendo por modal
 @app.route('/login_user', methods=['GET', 'POST'])
@@ -155,7 +155,7 @@ def logout():
 
 # Ejecuta la aplicación Flask
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    #app.run(host='0.0.0.0')
     app.run()
 
 
