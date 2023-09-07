@@ -1,0 +1,115 @@
+/* Estilos para los inputs */
+.input-container {
+    position: relative;
+    margin: 10% 15% 10% 15%;
+    max-width: 100%;
+  }
+  
+  .input-container input {
+  
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid #ccc;
+    padding: 5px 0;
+    background-color: transparent;
+    outline: none;
+  }
+  
+  .input-container .label {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    color: #c70c1e;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .input-container input:focus~.label {
+    position: absolute !important;
+    top: -20px !important;
+    left: 0 !important;
+    font-weight: bold;
+    color: #c70c1e !important;
+    transition: all 0.3s ease !important;
+    pointer-events: none !important;
+  }
+  
+  .input-container input:placeholder-shown~.label {
+    top: 0;
+    font-size: 16px;
+    color: #ccc;
+  }
+  
+  .input-container .underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background-color: #c70c1e;
+    transform: scaleX(0);
+    transition: all 0.3s ease;
+  }
+  
+  .input-container input:focus~.underline,
+  .input-container input:valid~.underline {
+    transform: scaleX(1);
+  }
+  
+  
+  /* FIN del segmento para los inputs inicio sesion personalizados */
+
+// Definir variables de color
+$color-negro: #000000;
+$color-rojo: #c70c1e;
+$color-rojo-hover: #fa4646;
+
+/* modal login */
+.custom-modal-title {
+    display: flex;
+    justify-content: end;
+}
+
+.custom-form {
+    margin-top: 6%;
+    margin-block-end: 9%;
+}
+
+.custom-form .TittleLogin {
+    margin-top: -5%;
+    font-size: 32px;
+    color: $color-negro; /* Usar variable de color */
+    font-weight: 600;
+}
+
+.custom-form .TittleLogin>span {
+    color: $color-rojo; /* Usar variable de color */
+}
+
+.custom-paragraph {
+    color: $color-negro; /* Usar variable de color */
+    font-weight: 600;
+}
+
+.custom-form a {
+    color: $color-rojo; /* Usar variable de color */
+    text-decoration: none;
+}
+
+.custom-form a:hover {
+    color: $color-rojo-hover; /* Usar variable de color */
+}
+
+.custom-form .custom-container-o {
+    max-width: 100%;
+}
+
+.custom-form .custom-container-o .custom-row {
+    margin: 0% 11% 0% 11%;
+}
+
+.loginlogo img {
+    max-width: 15%;
+}
+
+ 

@@ -14,3 +14,15 @@ def in_session(f):
             return redirect(url_for('home'))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def login_requiredUser_system(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("usersis_id") is None:
+            return redirect(url_for('login_system'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+

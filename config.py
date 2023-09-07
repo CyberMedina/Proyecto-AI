@@ -5,10 +5,10 @@ import mysql.connector
 # Función para establecer conexión en la base de datos
 def connectionBD():
     db = mysql.connector.connect(
-        host="localhost",
+        host="127.0.0.1",
         user="root",
         password="1233456",
-        database="Velaroma"
+        database="proyectoia"
     )
     return db
 
