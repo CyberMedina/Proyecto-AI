@@ -9,10 +9,27 @@ from flask import Flask, g # Para poder realizar variables globales en jinja2
 from urllib.parse import urlencode #Dependencia utilizada para redirigir hacia modals
 from config import connectionBD, config
 from helpers import in_session, login_requiredUser_system
+import os
+import openai
+from decimal import Decimal
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.config.from_mapping(config)
+
+
+
+# Establecer la clave de la API de ChatGPT
+openai.api_key = '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'
+
+# Crear una variable para el prompt
+prompt = "Eres un asistente para el negocio Lubicentro dos hermanos y crearás un reporte de la cantidad de productos: "
+# Crear una variable para la consulta a la base de datos
+query = """SELECT p.id_producto, p.nombre AS nombre_producto, p.descripcion, p.precio, u.nombre AS unidad_medida, c.nombre AS categoria
+FROM productos p
+JOIN unidades_medida u ON p.unidad_medida_id = u.id_unidad
+JOIN categorias c ON p.categoria_id = c.id_categoria
+ORDER BY p.nombre ASC"""
 
 
 
@@ -339,6 +356,65 @@ def home_system():
     return render_template('home_system.html')    
 
 
+@app.route('/asistencia_ia', methods=['GET', 'POST'])
+@login_requiredUser_system
+def asistencia_ia():
+
+    if request.method == 'POST':
+        db = connectionBD()
+        cursor = db.cursor(dictionary=True)
+        # Suponiendo que 'results' es una lista de resultados
+
+
+
+
+        # Crear un cursor para ejecutar consultas
+
+
+        # Ejecutar la consulta y obtener los resultados
+        cursor.execute(query)
+        results = cursor.fetchall()
+        for row in results:
+            for key, value in row.items():
+                if isinstance(value, Decimal):
+                    row[key] = float(value)
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+
+        # Imprimir los resultados de la consulta
+        
+
+        # Convertir cada elemento de results a cadena si es necesario
+        results_str = [str(result) for result in results]
+
+        content = prompt + ' '.join(results_str)
+
+        print(content)
+
+        # Crear una variable para el chat con ChatGPT
+        response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+        {
+        "role": 'user',
+        "content": content
+        }
+    ],
+        temperature=0.8,
+        max_tokens=1024,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
+        )
+
+        # Imprimir la respuesta de ChatGPT
+        print(response['choices'][0]['message']['content'])
+        return render_template('asistenciaIA.html', response=response['choices'][0]['message']['content']) 
+
+
+
+    return render_template('asistenciaIA.html', response="")   
 # Logout
 @app.route('/Cerrar_Sesion')
 def Cerrar_Sesion():

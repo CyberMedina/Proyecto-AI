@@ -1,0 +1,93 @@
+{% extends './layaout_home_system.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+
+{% block body %}
+<!-- ========== section start ========== -->
+<section>
+  <form action="/asistencia_ia" method="POST">
+    <div class="container-fluid">
+      <!-- ========== title-wrapper start ========== -->
+      <div class="title-wrapper pt-30">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <div class="title d-flex align-items-center flex-wrap">
+              <h2 class="mr-40">Asistencia IA</h2>
+              <button type="submit" class="main-btn primary-btn btn-hover btn-sm">
+                <i class="lni lni-plus mr-5"></i> Generar nuevo reporte</button>
+            </div>
+          </div>
+          <!-- end col -->
+          <div class="col-md-6">
+            <div class="breadcrumb-wrapper">
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="#0">Dashboard</a>
+                  </li>
+                  <li class="breadcrumb-item active" aria-current="page">
+
+                  </li>
+                </ol>
+              </nav>
+            </div>
+          </div>
+          <!-- end col -->
+        </div>
+        <!-- end row -->
+      </div>
+      <!-- ========== title-wrapper end ========== -->
+
+      <!-- Invoice Wrapper Start -->
+      <div class="invoice-wrapper">
+        <div class="row">
+          <div class="col-12">
+            <div class="invoice-card card-style mb-30">
+              <div class="invoice-header">
+                <div class="invoice-for">
+                  <h2 class="mb-10">Reportes</h2>
+                  <p class="text-sm">
+                    
+                  </p>
+                </div>
+              </div>
+              <div class="invoice-address">
+                <div class="address-item">
+
+                  {% for paragraph in response.split('\n') %}
+                  <p class="text-sm">{{ paragraph }}</p>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="invoice-action">
+                <ul class="d-flex flex-wrap align-items-center justify-content-center">
+
+                  <li class="m-2">
+                    <a href="#0" class="main-btn primary-btn-outline btn-hover">
+                      Descargar reporte
+                    </a>
+                  </li>
+                  <li class="m-2">
+                    <a href="#0" class="main-btn primary-btn btn-hover">
+                      Guardar reporte
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!-- End Card -->
+          </div>
+          <!-- ENd Col -->
+        </div>
+        <!-- End Row -->
+      </div>
+      <!-- Invoice Wrapper End -->
+    </div>
+    <!-- end container -->
+  </form>
+</section>
+<!-- ========== section end ========== -->
+
+{% endblock %}
