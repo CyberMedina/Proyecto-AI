@@ -12,6 +12,9 @@ from helpers import in_session, login_requiredUser_system
 import os
 import openai
 from decimal import Decimal
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -19,8 +22,8 @@ app.config.from_mapping(config)
 
 
 
-# Establecer la clave de la API de ChatGPT
-openai.api_key = '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'
+# Establecer la clave de la API de ChatGPT (Se hace con el .env variable de entorno)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Crear una variable para el prompt
 prompt = "Eres un asistente para el negocio Lubicentro dos hermanos y crearás un reporte de la cantidad de productos: "
@@ -100,11 +103,25 @@ def home():
         cursor = db.cursor(dictionary=True)
         cursor.execute('SELECT id_categoria, nombre FROM categorias ORDER BY nombre ASC')
         categorias = cursor.fetchall()
+
+
+
+        cursor.execute("""SELECT p.id_producto, p.nombre AS nombre_producto, p.descripcion, p.precio, u.nombre AS unidad_medida, c.nombre AS categoria, i.nombre_archivo, i.ruta_archivo
+        FROM productos p
+        JOIN unidades_medida u ON p.unidad_medida_id = u.id_unidad
+        JOIN categorias c ON p.categoria_id = c.id_categoria
+        LEFT JOIN imagenes i ON p.id_producto = i.producto_id
+        ORDER BY p.nombre ASC
+        LIMIT 8""")
+
+        productosHome = cursor.fetchall()
+
         cursor.close()
 
 
 
-    return render_template('/index.html', categorias=categorias)
+
+    return render_template('/index.html', categorias=categorias, productosHome=productosHome)
 
 
 
@@ -332,7 +349,6 @@ def login_system():
         cursor = db.cursor(dictionary=True)
         cursor.execute('SELECT * FROM usuarios_sistema WHERE usuario = %s', (user,))
         user_row = cursor.fetchone()
-        cursor.close()
 
         if user_row and check_password_hash(user_row['contraseña'], password):
             # Si las credenciales son validas, el colaborador se loguea
