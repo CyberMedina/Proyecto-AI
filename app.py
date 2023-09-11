@@ -451,6 +451,8 @@ def Cerrar_Sesion_Sistema():
     return redirect(url_for('login_system'))
 
 
+#Print
+
 # Ejecuta la aplicación Flask
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
