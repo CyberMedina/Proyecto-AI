@@ -1,0 +1,28 @@
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasRightLabel">Carrito ({{ session['carrito']|length }})</h5>
+        <!-- ... (productos listados en el carrito) ... -->
+
+        <button class="vaciar-carrito">Vaciar Carrito</button>
+
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+
+        {% if session['carrito'] %}
+        {% for producto_id, detalles in session['carrito'].items() %}
+        <div class="carrito-item">
+            <img src="{{ detalles['imagen'] }}" alt="{{ detalles['nombre'] }}" width="50" height="50">
+            <strong>Nombre:</strong> {{ detalles['nombre'] }}<br>
+            <strong>Precio:</strong> {{ detalles['precio'] }}<br>
+            <strong>Cantidad:</strong> {{ detalles['cantidad'] }}<br>
+            <!-- Puedes agregar más detalles o estilos según lo necesites -->
+            <button class="eliminar-producto" data-producto-id="{{ producto_id }}">Eliminar</button>
+        </div>
+        <hr> <!-- Separador entre productos -->
+        {% endfor %}
+        {% else %}
+        <p>No hay artículos en tu carrito.</p>
+        {% endif %}
+    </div>
+</div>

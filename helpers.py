@@ -26,3 +26,16 @@ def login_requiredUser_system(f):
 
 
 
+def obtener_detalles_productos(producto_ids):
+    db = connectionBD()
+    cursor = db.cursor(dictionary=True)
+    
+    # Crear la consulta SQL
+    placeholders = ', '.join(['%s'] * len(producto_ids))
+    sql = f"SELECT * FROM productos WHERE id_producto IN ({placeholders})"
+    
+    cursor.execute(sql, producto_ids)
+    productos = cursor.fetchall()
+    
+    cursor.close()
+    return productos

@@ -36,6 +36,9 @@
                 </div>
             </div>
             <div class="col-lg-9 col-md-7">
+                {% if titulo_check == True %}
+                <h3>Resultados para la busqueda: {{ titulo_busqueda }} </h3>
+                {% endif %}
                 <div class="filter__item">
                     <div class="row">
                         <div class="col-lg-4 col-md-5">
@@ -51,7 +54,7 @@
                 </div>
                 <div class="row">
                     {% for producto in productos %}
-                    <div class="col-lg-4 col-md-6 col-sm-6">
+                    <div class="col-lg-4 col-md-6 col-sm-6 col-6">
                         <div class="product__item">
                             <div class="product__item__pic set-bg" data-setbg="{{ producto.ruta_archivo }}">
                                 <ul class="product__item__pic__hover">
