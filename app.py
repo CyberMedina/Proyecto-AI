@@ -1,23 +1,29 @@
 import hashlib
 import re
+import requests
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session, g
 from flask_session import Session
 from flask_mysqldb import MySQL, MySQLdb
 import mysql.connector
 from werkzeug.security import check_password_hash, generate_password_hash
 from urllib.parse import urlencode #Dependencia utilizada para redirigir hacia modals
-from config import connectionBD, config
+from config import connectionBD
 from helpers import in_session, login_requiredUser_system, obtener_detalles_productos
 import os
 import openai
 from decimal import Decimal
+from flask_cors import cross_origin
 from dotenv import load_dotenv
+
+from odsclient import ODSClient
+
+
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-app.config.from_mapping(config)
+app.secret_key = os.getenv("SECRET_KEY")
+
 
 
 
@@ -50,9 +56,13 @@ def before_request():
         user_row = cursor.fetchone()
         cursor.close()
 
+        primer_nombre = user_row['Nombres'].split()[0] if user_row['Nombres'] else ''
+        primer_apellido = user_row['Apellidos'].split()[0] if user_row['Apellidos'] else ''
+
         g.user_id = session['usuariosClientesId']
-        g.nombres = user_row['Nombres']
-        g.apellidos = user_row['Apellidos']
+        g.nombres = primer_nombre
+        g.apellidos = primer_apellido
+
 
     if 'usersis_id' in session:
         db = connectionBD()
@@ -596,7 +606,110 @@ def asistencia_ia():
 
 
 
-    return render_template('asistenciaIA.html', response="")   
+    return render_template('asistenciaIA.html', response="")
+
+@app.route('/test', methods= ['GET', 'POST'])
+def test():
+    
+
+    return render_template('test.html')
+
+@app.route('/get_years', methods=['GET'])
+def get_years():
+    api_url = "https://public.opendatasoft.com/api/records/1.0/search/?dataset=all-vehicles-model&rows=0&facet=year"
+    response = requests.get(api_url)
+    years = set()
+    if response.status_code == 200:
+        data = response.json()
+        for facet in data['facet_groups']:
+            if facet['name'] == 'year':
+                for item in facet['facets']:
+                    years.add(item['name'])
+    return jsonify(sorted(list(years), reverse=True))
+
+
+@app.route('/get_makes', methods=['GET'])
+def get_makes():
+    year = request.args.get('year')
+    api_url = f"https://public.opendatasoft.com/api/records/1.0/search/?dataset=all-vehicles-model&rows=100&facet=year&refine.year={year}"
+    response = requests.get(api_url)
+    makes = set()
+    if response.status_code == 200:
+        data = response.json()
+        for record in data['records']:
+            makes.add(record['fields']['make'])
+    return jsonify(sorted(list(makes)))
+
+@app.route('/get_models', methods=['GET'])
+def get_models():
+    year = request.args.get('year')
+    make = request.args.get('make')
+    api_url = f"https://public.opendatasoft.com/api/records/1.0/search/?dataset=all-vehicles-model&rows=100&facet=year&refine.year={year}&facet=make&refine.make={make}"
+    response = requests.get(api_url)
+    models = set()
+    if response.status_code == 200:
+        data = response.json()
+        for record in data['records']:
+            models.add(record['fields']['model'])
+    return jsonify(sorted(list(models)))
+
+@app.route('/get_engine_displacements', methods=['GET'])
+def get_engine_displacements():
+    year = request.args.get('year')
+    make = request.args.get('make')
+    model = request.args.get('model')
+    api_url = f"https://public.opendatasoft.com/api/records/1.0/search/?dataset=all-vehicles-model&rows=100&facet=year&refine.year={year}&facet=make&refine.make={make}&facet=model&refine.model={model}"
+    response = requests.get(api_url)
+    engine_displacements = set()
+    if response.status_code == 200:
+        data = response.json()
+        for record in data['records']:
+            engine_displacements.add(record['fields'].get('displ', 'N/A'))
+    return jsonify(list(engine_displacements))
+
+# Función para obtener todos los productos
+def obtener_productos():
+    db = connectionBD()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * from PRODUCTOS")
+    productos = cursor.fetchall()
+    cursor.close()
+
+    return productos
+
+#RUTA API PARA VOICEFLOW TODOS LOS PRODUCTOS
+@app.route('/api/productos', methods=['GET'])
+@cross_origin()  # Esto habilita CORS solo para esta ruta
+def api_productos():
+    productos = obtener_productos()
+    respuesta = {"productos": productos}
+    return jsonify(respuesta)
+
+#RUTA API PARA VOICEFLOW PARA DEVOLVER EL NOMBRE DE LA SESION LOGUEADA
+@app.route('/get_nombre_apellido/<int:usuariosClientesId>', methods=['GET'])
+def get_nombre_apellido(usuariosClientesId):
+    db = connectionBD()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(
+        'SELECT Nombres, Apellidos FROM usuarios_clientes WHERE usuariosClientesId = %s',
+        (usuariosClientesId,)
+    )
+    user_row = cursor.fetchone()
+    cursor.close()
+
+    if user_row and user_row['Nombres'] and user_row['Apellidos']:
+        primer_nombre = user_row['Nombres'].split()[0]
+        primer_apellido = user_row['Apellidos'].split()[0]
+    else:
+        primer_nombre = primer_apellido = ''
+
+    response = {
+        'primer_nombre': primer_nombre,
+        'primer_apellido': primer_apellido
+    }
+    return jsonify(response)
+
+
 # Logout
 @app.route('/Cerrar_Sesion')
 def Cerrar_Sesion():
@@ -605,6 +718,8 @@ def Cerrar_Sesion():
     session.pop('Nombres', None)
     print("Sesión cerrada exitosamente")
     return redirect(url_for('home'))
+
+
 
 @app.route('/Cerrar_Sesion_Sistema')
 def Cerrar_Sesion_Sistema(): 

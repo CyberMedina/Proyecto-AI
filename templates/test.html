@@ -1,0 +1,71 @@
+{% extends './layaout.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+
+{% block body %}
+{% block carousel %}{% endblock %}
+
+<select id="year" name="year">
+    <!-- Añadir opciones de año aquí -->
+</select>
+
+<select id="make" name="make">
+    <!-- Las opciones se llenarán dinámicamente -->
+</select>
+
+<select id="model" name="model">
+    <!-- Las opciones se llenarán dinámicamente -->
+</select>
+
+<select id="Engine displacement" name="Engine displacement">
+    <!-- Las opciones se llenarán dinámicamente -->
+</select>
+
+<script>
+    function loadYears() {
+        fetch('/get_years')
+            .then(response => response.json())
+            .then(data => {
+                let yearSelect = document.getElementById('year');
+                yearSelect.innerHTML = data.map(year => `<option value="${year}">${year}</option>`).join('');
+            });
+    }
+    
+    // Llama a la función loadYears cuando se carga la página
+    window.onload = loadYears;
+    
+    document.getElementById('year').addEventListener('change', function() {
+        fetch('/get_makes?year=' + this.value)
+            .then(response => response.json())
+            .then(data => {
+                let makeSelect = document.getElementById('make');
+                makeSelect.innerHTML = data.map(make => `<option value="${make}">${make}</option>`).join('');
+            });
+    });
+    
+    document.getElementById('make').addEventListener('change', function() {
+        const year = document.getElementById('year').value;
+        fetch(`/get_models?year=${year}&make=${this.value}`)
+            .then(response => response.json())
+            .then(data => {
+                let modelSelect = document.getElementById('model');
+                modelSelect.innerHTML = data.map(model => `<option value="${model}">${model}</option>`).join('');
+            });
+    });
+    
+    document.getElementById('model').addEventListener('change', function() {
+        const year = document.getElementById('year').value;
+        const make = document.getElementById('make').value;
+        fetch(`/get_engine_displacements?year=${year}&make=${make}&model=${this.value}`)
+            .then(response => response.json())
+            .then(data => {
+                let engineDisplacementSelect = document.getElementById('Engine displacement');
+                engineDisplacementSelect.innerHTML = data.map(displ => `<option value="${displ}">${displ} L</option>`).join('');
+            });
+    });
+    
+</script>
+
+<br><br><br><br><br><br><br><br><br><br>
+{% endblock %}

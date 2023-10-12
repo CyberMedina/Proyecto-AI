@@ -1,3 +1,4 @@
 /env
 .env
 /flask_session
+env
