@@ -22,6 +22,13 @@
     <!-- Las opciones se llenarán dinámicamente -->
 </select>
 
+<button id="search-button">Buscar Imágenes</button>
+
+<br>
+<div id="images-container"></div>
+
+
+
 <script>
     function loadYears() {
         fetch('/get_years')
@@ -64,6 +71,20 @@
                 engineDisplacementSelect.innerHTML = data.map(displ => `<option value="${displ}">${displ} L</option>`).join('');
             });
     });
+
+    document.getElementById('search-button').addEventListener('click', function() {
+        const year = document.getElementById('year').value;
+        const make = document.getElementById('make').value;
+        const model = document.getElementById('model').value;
+        
+        fetch(`/search_images?year=${year}&make=${make}&model=${model}`)
+            .then(response => response.json())
+            .then(data => {
+                const imagesContainer = document.getElementById('images-container');
+                imagesContainer.innerHTML = data.map(url => `<img src="${url}" alt="Car Image">`).join('');
+            });
+    });    
+    
     
 </script>
 

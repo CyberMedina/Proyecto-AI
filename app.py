@@ -12,6 +12,7 @@ from helpers import in_session, login_requiredUser_system, obtener_detalles_prod
 import os
 import openai
 from decimal import Decimal
+from bs4 import BeautifulSoup
 from flask_cors import cross_origin
 from dotenv import load_dotenv
 
@@ -686,28 +687,56 @@ def api_productos():
     return jsonify(respuesta)
 
 #RUTA API PARA VOICEFLOW PARA DEVOLVER EL NOMBRE DE LA SESION LOGUEADA
-@app.route('/get_nombre_apellido/<int:usuariosClientesId>', methods=['GET'])
-def get_nombre_apellido(usuariosClientesId):
-    db = connectionBD()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute(
-        'SELECT Nombres, Apellidos FROM usuarios_clientes WHERE usuariosClientesId = %s',
-        (usuariosClientesId,)
-    )
-    user_row = cursor.fetchone()
-    cursor.close()
+@app.route('/get_nombre_apellido', methods=['GET'])
+def get_nombre_apellido():
+    if 'usuariosClientesId' in session:
+        db = connectionBD()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            'SELECT Nombres, Apellidos FROM usuarios_clientes WHERE usuariosClientesId = %s',
+            (session['usuariosClientesId'],)
+        )
+        user_row = cursor.fetchone()
+        cursor.close()
 
-    if user_row and user_row['Nombres'] and user_row['Apellidos']:
-        primer_nombre = user_row['Nombres'].split()[0]
-        primer_apellido = user_row['Apellidos'].split()[0]
+        if user_row and user_row['Nombres'] and user_row['Apellidos']:
+            primer_nombre = user_row['Nombres'].split()[0]
+            primer_apellido = user_row['Apellidos'].split()[0]
+        else:
+            primer_nombre = primer_apellido = ''
+
+        response = {
+            'primer_nombre': primer_nombre,
+            'primer_apellido': primer_apellido
+        }
+        return jsonify(response)
     else:
-        primer_nombre = primer_apellido = ''
+        return jsonify(error='usuariosClientesId not in session'), 400
 
-    response = {
-        'primer_nombre': primer_nombre,
-        'primer_apellido': primer_apellido
-    }
-    return jsonify(response)
+
+@app.route('/search_images', methods=['GET'])
+def search_images():
+    year = request.args.get('year')
+    make = request.args.get('make')
+    model = request.args.get('model')
+
+    query = f"{year} {make} {model} car"
+    
+    subscription_key = "9c66d63084ff47dc99cbbb10b4d5dd9d"
+    endpoint = "https://api.bing.microsoft.com/v7.0/images/search"
+    
+    headers = {"Ocp-Apim-Subscription-Key": subscription_key}
+    params = {"q": query, "count": 3, "imageType": "Transparent"}  # Transparent para buscar imágenes PNG
+
+    response = requests.get(endpoint, headers=headers, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        img_urls = [img['thumbnailUrl'] for img in data['value']]
+        return jsonify(img_urls)
+    
+    return jsonify(error="No se pudo obtener las imágenes"), 500
+
 
 
 # Logout
@@ -730,6 +759,9 @@ def Cerrar_Sesion_Sistema():
     session.pop('rol', None)
 
     return redirect(url_for('login_system'))
+
+
+
 
 
 #Print
