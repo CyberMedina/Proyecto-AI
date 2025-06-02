@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import re
 import requests
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session, g
@@ -6,18 +7,36 @@ from flask_session import Session
 from flask_mysqldb import MySQL, MySQLdb
 import mysql.connector
 from werkzeug.security import check_password_hash, generate_password_hash
-from urllib.parse import urlencode #Dependencia utilizada para redirigir hacia modals
+# Dependencia utilizada para redirigir hacia modals
+from urllib.parse import urlencode
 from config import connectionBD
 from helpers import in_session, login_requiredUser_system, obtener_detalles_productos
 import os
 import openai
 from decimal import Decimal
 from bs4 import BeautifulSoup
-from flask_cors import cross_origin
+from flask_cors import cross_origin, CORS
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from twilio.rest import Client
+from heyoo import WhatsApp
+import time
+import json
+import fitz
+from pprint import pprint
+from PyPDF2 import PdfReader
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from langchain.agents import create_sql_agent
+from langchain.agents.agent_toolkits import SQLDatabaseToolkit
+from langchain.sql_database import SQLDatabase
+from langchain.llms.openai import OpenAI
+from langchain.agents import AgentExecutor
+from langchain.agents.agent_types import AgentType
+from langchain.chat_models import ChatOpenAI
+
 
 from odsclient import ODSClient
-
 
 
 load_dotenv()
@@ -26,49 +45,36 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 
+# Se instancia la variable global para ser usada en jinja
+app.jinja_env.globals['g'] = g
 
 
-# Establecer la clave de la API de ChatGPT (Se hace con el .env variable de entorno)
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Crear una variable para el prompt
-prompt = "Eres un asistente para el negocio Lubicentro dos hermanos y crearás un reporte de la cantidad de productos: "
-# Crear una variable para la consulta a la base de datos
-query = """SELECT p.id_producto, p.nombre AS nombre_producto, p.descripcion, p.precio, u.nombre AS unidad_medida, c.nombre AS categoria
-FROM productos p
-JOIN unidades_medida u ON p.unidad_medida_id = u.id_unidad
-JOIN categorias c ON p.categoria_id = c.id_categoria
-ORDER BY p.nombre ASC"""
-
-
-
-
-app.jinja_env.globals['g'] = g #Se instancia la variable global para ser usada en jinja
-
-
-#No puuede ser cambiada esta función, ya que esta función es una palabra reservada
+# No puuede ser cambiada esta función, ya que esta función es una palabra reservada
 # Define una función para realizar tareas antes de cada solicitud
 @app.before_request
 def before_request():
     if 'usuariosClientesId' in session:
         db = connectionBD()
         cursor = db.cursor(dictionary=True)
-        cursor.execute('SELECT Nombres, Apellidos FROM usuarios_clientes WHERE usuariosClientesId = %s', (session['usuariosClientesId'],))
+        cursor.execute('SELECT Nombres, Apellidos FROM usuarios_clientes WHERE usuariosClientesId = %s',
+                       (session['usuariosClientesId'],))
         user_row = cursor.fetchone()
         cursor.close()
 
-        primer_nombre = user_row['Nombres'].split()[0] if user_row['Nombres'] else ''
-        primer_apellido = user_row['Apellidos'].split()[0] if user_row['Apellidos'] else ''
+        primer_nombre = user_row['Nombres'].split(
+        )[0] if user_row['Nombres'] else ''
+        primer_apellido = user_row['Apellidos'].split(
+        )[0] if user_row['Apellidos'] else ''
 
         g.user_id = session['usuariosClientesId']
         g.nombres = primer_nombre
         g.apellidos = primer_apellido
 
-
     if 'usersis_id' in session:
         db = connectionBD()
         cursor = db.cursor(dictionary=True)
-        cursor.execute('SELECT us.usersis_id, us.nombres, us.apellidos, us.correo, r.rolname FROM usuarios_sistema us JOIN rol r ON us.id_rol = r.id_rol WHERE us.usersis_id = %s', (session['usersis_id'],))
+        cursor.execute(
+            'SELECT us.usersis_id, us.nombres, us.apellidos, us.correo, r.rolname FROM usuarios_sistema us JOIN rol r ON us.id_rol = r.id_rol WHERE us.usersis_id = %s', (session['usersis_id'],))
         user_row = cursor.fetchone()
         cursor.close()
 
@@ -85,20 +91,20 @@ def before_request():
     # Obtener el nombre de la sucursal seleccionada
     db = connectionBD()
     cursor = db.cursor(dictionary=True)
-    cursor.execute('SELECT nombre FROM sucursal WHERE sucursalId = %s', (session['sucursalId'],))
+    cursor.execute(
+        'SELECT nombre FROM sucursal WHERE sucursalId = %s', (session['sucursalId'],))
     g.sucursal_nombre = cursor.fetchone()['nombre']
     cursor.close()
 
     # Agrega aquí la lógica para obtener las categorías
     db = connectionBD()
     cursor = db.cursor(dictionary=True)
-    cursor.execute('SELECT id_categoria, nombre FROM categorias ORDER BY nombre ASC')
+    cursor.execute(
+        'SELECT id_categoria, nombre FROM categorias ORDER BY nombre ASC')
     categorias = cursor.fetchall()
     cursor.close()
 
     g.categorias = categorias  # Guarda las categorías en el objeto global g
-
-
 
 
 # Con esta cosa estarán disponibles las variables en todas las plantillas yai
@@ -106,19 +112,18 @@ def before_request():
 def inject_sucursal_nombre():
     return dict(sucursal_nombre=g.sucursal_nombre)
 
+
 @app.context_processor
 def inject_data():
     db = connectionBD()
     cursor = db.cursor(dictionary=True)
-    cursor.execute('SELECT sucursalId, nombre, direccion_texto, direccion_maps, telefono FROM sucursal')
+    cursor.execute(
+        'SELECT sucursalId, nombre, direccion_texto, direccion_maps, telefono FROM sucursal')
     sucursales = cursor.fetchall()
     cursor.close()
     db.close()
     return dict(sucursales=sucursales)
 
-
-    
-    
 
 @app.after_request
 def after_request(response):
@@ -129,22 +134,22 @@ def after_request(response):
     return response
 
 
-#Actualiza el proyecto al realizar modificaciones en el HTML en la carpeta templates
+# Actualiza el proyecto al realizar modificaciones en el HTML en la carpeta templates
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 
-
-#Esta es una forma de almacenar la información del usuario en el servidor para luego ser utilizada en la aplicación
-app.config["SESSION_PERMANENT"] = False #Configura la sesion para que no sea permanente y se cierre cuando se cierre el navegador
-app.config["SESSION_TYPE"] = "filesystem" # Define el tipo de almacenamiento para las sesiones, utilizando el almacenamiento en el sistema de archivos del servidor
+# Esta es una forma de almacenar la información del usuario en el servidor para luego ser utilizada en la aplicación
+# Configura la sesion para que no sea permanente y se cierre cuando se cierre el navegador
+app.config["SESSION_PERMANENT"] = False
+# Define el tipo de almacenamiento para las sesiones, utilizando el almacenamiento en el sistema de archivos del servidor
+app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-
 
 
 # Route for the home page
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    
+
     if request.method == 'GET':
         db = connectionBD()
         cursor = db.cursor(dictionary=True)
@@ -170,7 +175,6 @@ def home():
     LIMIT 8
 """, (session['sucursalId'],))
 
-
         productosHome = cursor.fetchall()
 
         cursor.close()
@@ -181,12 +185,20 @@ def home():
     # Obtener el nombre de la sucursal seleccionada
         db = connectionBD()
         cursor = db.cursor(dictionary=True)
-        cursor.execute('SELECT nombre FROM sucursal WHERE sucursalId = %s', (session['sucursalId'],))
+        cursor.execute(
+            'SELECT nombre FROM sucursal WHERE sucursalId = %s', (session['sucursalId'],))
         sucursal_nombre = cursor.fetchone()['nombre']
         cursor.close()
 
     return render_template('/index.html', categorias=g.categorias, productosHome=productosHome, sucursal_nombre=sucursal_nombre)
 
+
+@app.route('/login_modal', methods=['GET'])
+def login():
+    # Lógica para determinar si se debe abrir el modal de inicio de sesión
+    abrir_modal = True  # Puedes ajustar esta lógica según tus necesidades
+
+    return render_template('index.html', abrir_modal=abrir_modal)
 
 
 @app.route('/login_user', methods=['POST'])
@@ -202,7 +214,8 @@ def login_user():
     # Verifica las credenciales en la base de datos
     db = connectionBD()
     cursor = db.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM usuarios_clientes WHERE correo = %s', (email,))
+    cursor.execute(
+        'SELECT * FROM usuarios_clientes WHERE correo = %s', (email,))
     user_row = cursor.fetchone()
 
     cursor.close()
@@ -211,10 +224,18 @@ def login_user():
     if user_row and check_password_hash(user_row['Contraseña'], password):
         session['usuariosClientesId'] = user_row['usuariosClientesId']
         session['Nombres'] = user_row['Nombres']
+        db = connectionBD()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("""UPDATE estado_conexion
+SET estado = CASE
+               WHEN usuariosClientesId = '%s' THEN 1
+               ELSE 0
+            END;""", (session['usuariosClientesId'],))
+        db.commit()
+        cursor.close()
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'error': 'Las credenciales ingresadas no son válidas.'}), print("Error chele")
-    
 
 
 @app.route('/obtener_contenido_carrito')
@@ -223,7 +244,6 @@ def obtener_contenido_carrito():
     contenido = render_template('contenido_carrito.html')
     print(contenido)
     return contenido
-
 
 
 @app.route('/set_sucursal', methods=['POST'])
@@ -235,65 +255,73 @@ def set_sucursal():
     return jsonify({'success': False, 'error': 'Sucursal no válida.'})
 
 
-
 # Route for the user registration page
 @app.route('/register_user', methods=['GET', 'POST'])
 def register_user():
     if request.method == 'POST':
-        # Get form data
-        tipo_user = 2
-        nombre = request.form['nombre']
-        apellido = request.form['apellido']
-        email = request.form['email']
-        password = request.form['password']
-        repite_password = request.form['repite_password']
-        sexo = request.form['sexo']
+        # Información primer form
 
-        # Check if user already exists in the database
-        db = connectionBD()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute('SELECT * FROM login_python WHERE email = %s', (email,))
-        account = cursor.fetchone()
-        cursor.close()
-        if account:
-            error = "La cuenta de correo electrónico ya existe."
-            return render_template('/auth/register.html', error=error)
+        nombres = request.form['nombres']
+        apellidos = request.form['apellidos']
+        cedula = request.form['cedula']
+        correo = request.form['email']
+        telefono = request.form['telefono']
+        contrasena = request.form['password']
 
-        # Check if passwords match
-        if password != repite_password:
-            error = "Las contraseñas no coinciden. Por favor, inténtalo de nuevo."
-            return render_template('/auth/register.html', error=error)
+        # Información segundo form
+        # Información modal
 
-        # Hash the password using SHA256
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        car_year = request.form['car_year']
+        car_make = request.form['car_make']
+        car_model = request.form['car_model']
+        car_cc = request.form['car_cc']
+        car_img = request.form['car_img']
+
+        # Información que sigue del form
+        numeroPlaca = request.form['numeroPlaca']
+        numeroChasis = request.form['numeroChasis']
+        numeroMotor = request.form['numeroMotor']
+
+        # Encripatando la contrasena
+        password_hash = generate_password_hash(contrasena)
 
         # Insert user data into the database
+        db = connectionBD()
+        cursor = db.cursor(dictionary=True)
         cursor = db.cursor()
-        cursor.execute("INSERT INTO login_python (tipo_user, nombre, apellido, email, password, sexo) VALUES (%s, %s, %s, %s, %s, %s)", (tipo_user, nombre, apellido, email, password_hash, sexo))
+        cursor.execute(
+            "INSERT INTO usuarios_clientes (Nombres, Apellidos, Correo, Cedula, Telefono, Contraseña) VALUES (%s, %s, %s, %s, %s, %s)",
+            (nombres, apellidos, correo, cedula, telefono, password_hash))
+
+        usuariosClientesId = cursor.lastrowid
+
+        # Insertar datos del vehículo en la tabla vehiculos
+        cursor.execute(
+            "INSERT INTO vehiculos (usuariosClientesId, cc, marca, modelo, año, imgUrl, placa, chasis, numeroMotor) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (usuariosClientesId, car_cc, car_make, car_model, car_year, car_img, numeroPlaca, numeroChasis, numeroMotor))
+
+        # Insertar datos en la tabla estado_conexion
+        estado_conexion = 0  # Puedes establecer el estado según tu lógica de negocio
+        estado_whatsapp = 0
+        cursor.execute(
+            "INSERT INTO estado_conexion (usuariosClientesId, estado, estado_whatsapp) VALUES (%s, %s, %s)",
+            (usuariosClientesId, estado_conexion, estado_whatsapp))
+
         db.commit()
         cursor.close()
-        
 
-        msg = "Registro exitoso!"
-        return render_template('/auth/login.html', msg=msg)
-    
-    # Get the list of countries from the database
-    # db = connectionBD()
-    # cursor = db.cursor(dictionary=True)
-    # cursor.execute('SELECT nombre FROM departamentos')
-    # countries = cursor.fetchall()
-    # cursor.close()
+        print("SIMON CHELE TE REGISTRASTE CON TODO Y CARRO")
 
-    # Pass the list of countries to the template
-    return render_template('/auth/register_user.html')
+        return redirect(url_for('home'))
 
     # If accessing the registration page for the first time or GET request, show the registration form
-    return render_template('/auth/register.html')
+    return render_template('/auth/register_user.html')
 
-# El tipico error 404 cuando la página no existe
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template('/error404.html')
+
 
 @app.route('/lostpass', methods=['GET', 'POST'])
 def lostpass():
@@ -303,11 +331,12 @@ def lostpass():
 
     return render_template('/auth/lostpass.html')
 
+
 @app.route('/tienda', methods=['GET', 'POST'])
 def tienda():
     if request.method == 'GET':
-    
-    # Declaramos como false el titulo_check para que no se muestre el h3 titulo de la busqueda
+
+        # Declaramos como false el titulo_check para que no se muestre el h3 titulo de la busqueda
         titulo_check = False
 
     # Declaramos como none para que no marque error en el contexto de pasar la variable titulo_busqueda
@@ -316,10 +345,12 @@ def tienda():
         search_term = request.args.get('q', '')
         print(search_term)
 
-        page = request.args.get('page', 1, type=int)  # Obtener el número de página actual
+        # Obtener el número de página actual
+        page = request.args.get('page', 1, type=int)
         offset = (page - 1) * 9  # Calcular el offset para la paginación
 
-        id_categoria = request.args.get('id_categoria')  # Obtener el id_categoria de la URL
+        # Obtener el id_categoria de la URL
+        id_categoria = request.args.get('id_categoria')
 
         db = connectionBD()
         cursor = db.cursor(dictionary=True)
@@ -356,14 +387,10 @@ def tienda():
 
             total_productos = cursor.fetchone()['COUNT(*)']
 
-
-            cursor.execute('SELECT nombre FROM categorias WHERE id_categoria = %s', (id_categoria,)) 
-            titulo_busqueda = cursor.fetchone()['nombre']   
+            cursor.execute(
+                'SELECT nombre FROM categorias WHERE id_categoria = %s', (id_categoria,))
+            titulo_busqueda = cursor.fetchone()['nombre']
             titulo_check = True
-            
-
-
-
 
         # Si se proporciona un término de búsqueda, realizar la búsqueda en la base de datos
         elif search_term:
@@ -388,10 +415,8 @@ def tienda():
     LIMIT 9 OFFSET %s
 """, ('%' + search_term + '%', '%' + search_term + '%', session['sucursalId'], offset))
 
-
             print("Entró")
             productos = cursor.fetchall()
-
 
             cursor.execute("""
     SELECT COUNT(*) 
@@ -399,12 +424,11 @@ def tienda():
     JOIN inventario inv ON p.id_producto = inv.id_producto
     WHERE (p.nombre LIKE %s OR p.categoria_id IN (SELECT id_categoria FROM categorias WHERE nombre LIKE %s)) AND inv.sucursalId = %s
 """, ('%' + search_term + '%', '%' + search_term + '%', session['sucursalId']))
-            
+
             titulo_busqueda = search_term
 
-
             total_productos = cursor.fetchone()['COUNT(*)']
-            
+
         else:
             # Consulta de productos sin término de búsqueda
             # Consulta de productos con paginación (ajustado a 9 productos por página)
@@ -430,7 +454,6 @@ def tienda():
 
             productos = cursor.fetchall()
 
-            
             cursor.execute("""
     SELECT COUNT(*) 
     FROM productos p
@@ -440,27 +463,17 @@ def tienda():
 
             total_productos = cursor.fetchone()['COUNT(*)']
 
-
-
-
-
         # Consulta para contar el número total de productos
-
-
-        
-
-
-        
 
         # Calcular el número total de páginas
         total_paginas = (total_productos + 8) // 9
         print(total_paginas)
 
         # Consulta de categorías
-        cursor.execute('SELECT id_categoria, nombre FROM categorias ORDER BY nombre ASC')
+        cursor.execute(
+            'SELECT id_categoria, nombre FROM categorias ORDER BY nombre ASC')
         categorias = cursor.fetchall()
         cursor.close()
-
 
     return render_template('/shop-grid.html', productos=productos, categorias=categorias, page=page, total_paginas=total_paginas, titulo_check=titulo_check, titulo_busqueda=titulo_busqueda)
 
@@ -484,11 +497,12 @@ def agregar_carrito():
         session['carrito'][producto_id] = {
             'nombre': detalles_producto['nombre'],
             'precio': detalles_producto['precio'],
-            #'imagen': detalles_producto['ruta_archivo'],  # Asumo que 'ruta_archivo' está en la tabla 'productos', sino, se debe ajustar.
+            # 'imagen': detalles_producto['ruta_archivo'],  # Asumo que 'ruta_archivo' está en la tabla 'productos', sino, se debe ajustar.
             'cantidad': int(cantidad)
         }
 
     return jsonify(success=True, message="Producto agregado al carrito")
+
 
 @app.route('/eliminar_del_carrito', methods=['POST'])
 def eliminar_del_carrito():
@@ -524,7 +538,8 @@ def login_system():
         # Verifica las creedenciales en la base de datos
         db = connectionBD()
         cursor = db.cursor(dictionary=True)
-        cursor.execute('SELECT * FROM usuarios_sistema WHERE usuario = %s', (user,))
+        cursor.execute(
+            'SELECT * FROM usuarios_sistema WHERE usuario = %s', (user,))
         user_row = cursor.fetchone()
 
         if user_row and check_password_hash(user_row['contraseña'], password):
@@ -539,14 +554,14 @@ def login_system():
             return render_template('/auth/login_system.html', error=error)
     if session.get("usersis_id"):
         return redirect(url_for('home_system'))
-    # Si entrea a la ruta del login_colaborador este renderiza la plantilla 
-    return render_template('/auth/login_system.html')    
+    # Si entrea a la ruta del login_colaborador este renderiza la plantilla
+    return render_template('/auth/login_system.html')
 
 
 @app.route('/home_system', methods=['GET', 'POST'])
 @login_requiredUser_system
 def home_system():
-    return render_template('home_system.html')    
+    return render_template('home_system.html')
 
 
 @app.route('/asistencia_ia', methods=['GET', 'POST'])
@@ -554,66 +569,273 @@ def home_system():
 def asistencia_ia():
 
     if request.method == 'POST':
-        db = connectionBD()
-        cursor = db.cursor(dictionary=True)
-        # Suponiendo que 'results' es una lista de resultados
+        #         # Establecer la clave de la API de ChatGPT (Se hace con el .env variable de entorno)
+        # openai.api_key = os.getenv("OPENAI_API_KEY")
 
+        # # Crear una variable para el prompt
+        # prompt = "Eres un asistente para el negocio Lubicentro dos hermanos y crearás un reporte de la cantidad de productos: "
+        # # Crear una variable para la consulta a la base de datos
+        # query = """SELECT p.id_producto, p.nombre AS nombre_producto, p.descripcion, p.precio, u.nombre AS unidad_medida, c.nombre AS categoria
+        # FROM productos p
+        # JOIN unidades_medida u ON p.unidad_medida_id = u.id_unidad
+        # JOIN categorias c ON p.categoria_id = c.id_categoria
+        # ORDER BY p.nombre ASC"""
+        pregunta_prompt = request.form["pregunta_prompt"]
 
+        # 1. Cargar la bbdd con langchain
 
+        db = SQLDatabase.from_uri(
+            "mysql://root:1233456@localhost:3306/proyectoIA")
 
-        # Crear un cursor para ejecutar consultas
+        # 2. Importar las APIs
 
+        os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
-        # Ejecutar la consulta y obtener los resultados
-        cursor.execute(query)
-        results = cursor.fetchall()
-        for row in results:
-            for key, value in row.items():
-                if isinstance(value, Decimal):
-                    row[key] = float(value)
+        # 3. Crear el LLM
 
-        # Cerrar el cursor y la conexión
-        cursor.close()
+        toolkit = SQLDatabaseToolkit(db=db, llm=OpenAI(temperature=0))
 
-        # Imprimir los resultados de la consulta
-        
-
-        # Convertir cada elemento de results a cadena si es necesario
-        results_str = [str(result) for result in results]
-
-        content = prompt + ' '.join(results_str)
-
-        print(content)
-
-        # Crear una variable para el chat con ChatGPT
-        response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-        {
-        "role": 'user',
-        "content": content
-        }
-    ],
-        temperature=0.8,
-        max_tokens=1024,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0
+        agent_executor = create_sql_agent(
+            llm=ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
+            toolkit=toolkit,
+            verbose=True,
+            agent_type=AgentType.OPENAI_FUNCTIONS
         )
 
-        # Imprimir la respuesta de ChatGPT
-        print(response['choices'][0]['message']['content'])
-        return render_template('asistenciaIA.html', response=response['choices'][0]['message']['content']) 
+        resultado = agent_executor.run(pregunta_prompt)
 
+        return render_template("asistenciaIA.html", response=resultado)
 
+        # llm = ChatOpenAI(temperature=0,model_name='gpt-3.5-turbo')
+
+        # # 4. Crear la cadena
+        # cadena = SQLDatabase(llm = llm, database = db, verbose=False)
+
+        # # 5. Formato personalizado de respuesta
+        # formato = """
+        # Data una pregunta del usuario:
+        # 1. crea una consulta de sqlite3
+        # 2. revisa los resultados
+        # 3. devuelve el dato
+        # 4. si tienes que hacer alguna aclaración o devolver cualquier texto que sea siempre en español
+        # #{question}
+        # """
+
+        # # 6. Función para hacer la consulta
+
+        # def consulta(pregunta_prompt):
+        #     consulta = formato.format(question = pregunta_prompt)
+        #     resultado = cadena.run(consulta)
+        #     print(resultado)
+
+        # consulta(pregunta_prompt)
 
     return render_template('asistenciaIA.html', response="")
 
-@app.route('/test', methods= ['GET', 'POST'])
+
+@app.route('/test', methods=['GET', 'POST'])
+@cross_origin()
 def test():
+
+    # subscription_key = '9c66d63084ff47dc99cbbb10b4d5dd9d'
+
+    # search_url = "https://api.bing.microsoft.com/v7.0/search"
+
+    # def buscar_manual(query, num_links=5):
+    #     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
+    #     params = {"q": query, "fileType": "pdf", "count": num_links}
+    #     response = requests.get(search_url, headers=headers, params=params)
+    #     results = response.json()
+    #     links = [result["url"] for result in results["webPages"]["value"]]
+    #     print(f"Enlace para descargar el PDF: {links}")  # Imprime el enlace del PDF
+    #     return links
+
+    #     # Descarga el primer PDF que se encuentra en la lista de enlaces proporcionada por Bing
+    # def descargar_primer_pdf(links, keywords):
+    #     for link in links:
+    #         response = requests.get(link)
+    #         if response.status_code == 200:
+    #             with open("manual.pdf", "wb") as pdf_file:
+    #                 pdf_file.write(response.content)
+    #             # Extraer oraciones del PDF descargado
+    #             extracted_sentences = extraer_oraciones_con_palabras_clave("manual.pdf", keywords)
+    #             # Verificar si las palabras clave están presentes en las oraciones
+    #             if any(any(keyword in sentence.lower() for keyword in keywords) for sentence in extracted_sentences):
+    #                 return extracted_sentences
+    #     return []
+
+    # # Abre el PDF y extrae oraciones con palabras clave, limitando a 2000 palabras
+    # def extraer_oraciones_con_palabras_clave(pdf_file_path, keywords):
+    #     extracted_sentences = []
+    #     total_words = 0
+    #     try:
+    #         with fitz.open(pdf_file_path) as pdf_document:
+    #             for page_num in range(pdf_document.page_count):
+    #                 page = pdf_document[page_num]
+    #                 text = page.get_text()
+    #                 paragraphs = text.split('\n\n')  # Suponiendo que los párrafos están separados por dos saltos de línea
+    #                 for paragraph in paragraphs:
+    #                     if any(keyword in paragraph.lower() for keyword in keywords):
+    #                         sentences = paragraph.split('.')  # Suponiendo que las oraciones están separadas por puntos
+    #                         for sentence in sentences:
+    #                             word_count = len(sentence.split())
+    #                             if total_words + word_count <= 2000:
+    #                                 extracted_sentences.append(sentence.strip())
+    #                                 total_words += word_count
+    #                             else:
+    #                                 break
+    #                     if total_words >= 2000:
+    #                         break
+    #                 if total_words >= 2000:
+    #                     break
+    #     except Exception as e:
+    #         print(f"Error al leer el archivo PDF: {e}")
+    #     return extracted_sentences
+
+    # # Almacena las oraciones que cumplen con los criterios en una lista
+    # def almacenar_oraciones(pdf_path, keywords):
+    #     extracted_sentences = extraer_oraciones_con_palabras_clave(pdf_path, keywords)
+    #     # Haz lo que necesites con las oraciones extraídas
+    #     return extracted_sentences
+
+    # if request.method == "GET":
+
+    #     search_query = 'TOYOTA YARIS 2008 MANUAL filetype:PDF'
+    #     links = buscar_manual(search_query)
+    #     keywords = ["oil", "tire", "oil filters", "oil quality"]  # Palabras clave a buscar en el PDF
+    #     extracted_sentences = descargar_primer_pdf(links, keywords)
+
+    #     if extracted_sentences:
+    #         print(extracted_sentences)
+    #     else:
+    #         print("No se encontraron enlaces con palabras clave en el PDF.")
+
+    # # Tu clave de suscripción de la API de Bing
+    # subscription_key = '9c66d63084ff47dc99cbbb10b4d5dd9d'
+    # search_url = "https://api.bing.microsoft.com/v7.0/search"
+
+    # # Palabras clave que estás buscando
+    # palabras_clave = ["Recommend Oil change", "Oil filters", "Lubricants and oils", "Service recommendations", "Vehicle inspection", "Maintenance program", "Vehicle fluids", "Recommended oil brands", "Oil change intervals", "Types of oils", "Common mechanical problems", "Vehicle issue solutions", "Oil quality", "Industry standards"]
+
+    # # Término de búsqueda general
+    # search_term = "Honda Fit 2007"
+
+    # # Función para buscar sitios web y extraer 2 párrafos con palabras clave
+    # def buscar_y_extraer_parrafos():
+    #     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
+
+    #     for keyword in palabras_clave:
+    #         query = f'{search_term} + "{keyword}"'
+    #         params = {"q": query, "textDecorations": True, "textFormat": "HTML"}
+
+    #         response = requests.get(search_url, headers=headers, params=params)
+    #         response.raise_for_status()
+    #         search_results = response.json()
+
+    #         for result in search_results["webPages"]["value"]:
+    #             url = result["url"]
+    #             print(f"Buscando en: {url}")
+
+    #             # Obtener contenido de la página web
+    #             response = requests.get(url)
+    #             soup = BeautifulSoup(response.content, "html.parser")
+
+    #             # Contador para contar los párrafos encontrados
+    #             paragraphs_found = 0
+
+    #             # Buscar párrafos con la palabra clave y extraer dos
+    #             for p in soup.find_all("p"):
+    #                 if keyword.lower() in p.text.lower():
+    #                     print(f"Palabra clave encontrada: {keyword}")
+    #                     print(f"Párrafo: {p.text}")
+    #                     print("------")
+    #                     paragraphs_found += 1
+
+    #                     # Almacenar los dos párrafos encontrados y luego salir del bucle
+    #                     if paragraphs_found == 2:
+    #                         break
+
+    #             # Si encontramos los dos párrafos, salir del bucle de resultados
+    #             if paragraphs_found == 2:
+    #                 break
+
+    # # Llamada a la función
+    # buscar_y_extraer_parrafos()
+
+    # subscription_key = '9c66d63084ff47dc99cbbb10b4d5dd9d'
+
+    # search_url = "https://api.bing.microsoft.com/v7.0/search"
+    # Clave de la API de Bing
+
+    db = connectionBD()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+SELECT v.marca, v.modelo, v.año, v.imgUrl
+FROM vehiculos v
+JOIN estado_conexion ec ON v.usuariosClientesId = ec.usuariosClientesId
+WHERE ec.estado = 1;
+        """)
+
+    car_row = cursor.fetchone()
+
+    db.close()
+
+    if car_row:
+        # Almacena los valores en variables
+        marca = car_row['marca']
+        modelo = car_row['modelo']
+        año = car_row['año']
+        imgUrl = car_row['imgUrl']
+        
+        # Ahora puedes usar estas variables según tus necesidades
+        print("Marca:", marca)
+        print("Modelo:", modelo)
+        print("Año:", año)
+        print("URL de la imagen:", imgUrl)
+    else:
+        print("No se encontraron vehículos con estado 1.")
+
+    API_KEY = '9c66d63084ff47dc99cbbb10b4d5dd9d'
+
+    SEARCH_ENDPOINT = "https://api.bing.microsoft.com/v7.0/search"
+    # Lista de palabras clave
+    PALABRAS_CLAVE = ['Oil RECOMMENDATION', 'OIL FILTER RECOMMENDATION',
+                      'TIRES SIZE', 'COMMON ISSUES', 'OIL CHANGE']
+    # Modelo de automóvil constante
+    MODELO_AUTO = f'{marca} {modelo}, {año}'
+
+    resultados = {}
+    for keyword in PALABRAS_CLAVE:
+        query = f"{MODELO_AUTO} {keyword}"
+        headers = {'Ocp-Apim-Subscription-Key': API_KEY}
+        params = {
+            'q': query,
+            'count': 5
+        }
+        response = requests.get(
+            SEARCH_ENDPOINT, headers=headers, params=params)
+        results = response.json()
+
+        # Guardar los snippets en el diccionario de resultados
+        snippets = []
+        if 'webPages' in results.keys() and 'value' in results['webPages']:
+            for resultado in results['webPages']['value']:
+                snippet = resultado.get(
+                    'snippet', 'No hay descripción disponible')
+                snippets.append(snippet)
+        resultados[keyword] = snippets
+
+    car_model = {
+            'carro' : MODELO_AUTO,
+            'imgUrl' : imgUrl
+        }
+        # Agregar car_model como una nueva clave en resultados
+    resultados['CAR_DETAILS'] = car_model
     
+    return jsonify(resultados)
 
     return render_template('test.html')
+
 
 @app.route('/get_years', methods=['GET'])
 def get_years():
@@ -641,6 +863,7 @@ def get_makes():
             makes.add(record['fields']['make'])
     return jsonify(sorted(list(makes)))
 
+
 @app.route('/get_models', methods=['GET'])
 def get_models():
     year = request.args.get('year')
@@ -653,6 +876,7 @@ def get_models():
         for record in data['records']:
             models.add(record['fields']['model'])
     return jsonify(sorted(list(models)))
+
 
 @app.route('/get_engine_displacements', methods=['GET'])
 def get_engine_displacements():
@@ -669,6 +893,8 @@ def get_engine_displacements():
     return jsonify(list(engine_displacements))
 
 # Función para obtener todos los productos
+
+
 def obtener_productos():
     db = connectionBD()
     cursor = db.cursor(dictionary=True)
@@ -678,7 +904,9 @@ def obtener_productos():
 
     return productos
 
-#RUTA API PARA VOICEFLOW TODOS LOS PRODUCTOS
+# RUTA API PARA VOICEFLOW TODOS LOS PRODUCTOS
+
+
 @app.route('/api/productos', methods=['GET'])
 @cross_origin()  # Esto habilita CORS solo para esta ruta
 def api_productos():
@@ -686,32 +914,42 @@ def api_productos():
     respuesta = {"productos": productos}
     return jsonify(respuesta)
 
-#RUTA API PARA VOICEFLOW PARA DEVOLVER EL NOMBRE DE LA SESION LOGUEADA
+
 @app.route('/get_nombre_apellido', methods=['GET'])
+@cross_origin()
 def get_nombre_apellido():
-    if 'usuariosClientesId' in session:
-        db = connectionBD()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute(
-            'SELECT Nombres, Apellidos FROM usuarios_clientes WHERE usuariosClientesId = %s',
-            (session['usuariosClientesId'],)
-        )
+    db = connectionBD()
+    cursor = db.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT uc.usuariosClientesId, uc.nombres, uc.apellidos, uc.correo
+            FROM usuarios_clientes uc
+            JOIN estado_conexion ec ON uc.usuariosClientesId = ec.usuariosClientesId
+            WHERE estado = 1
+            ORDER BY ec.fecha_cambio_estado DESC
+            LIMIT 1;
+        """)
+
         user_row = cursor.fetchone()
-        cursor.close()
 
-        if user_row and user_row['Nombres'] and user_row['Apellidos']:
-            primer_nombre = user_row['Nombres'].split()[0]
-            primer_apellido = user_row['Apellidos'].split()[0]
+        if user_row and user_row['nombres'] and user_row['apellidos']:
+            primer_nombre = user_row['nombres']
+            primer_apellido = user_row['apellidos']
+
+            response = {
+                'primer_nombre': primer_nombre,
+                'primer_apellido': primer_apellido
+            }
+            return jsonify(response)
         else:
-            primer_nombre = primer_apellido = ''
+            return jsonify(error='No se encontraron usuarios conectados'), 404
 
-        response = {
-            'primer_nombre': primer_nombre,
-            'primer_apellido': primer_apellido
-        }
-        return jsonify(response)
-    else:
-        return jsonify(error='usuariosClientesId not in session'), 400
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
+    finally:
+        cursor.close()
 
 
 @app.route('/search_images', methods=['GET'])
@@ -721,12 +959,13 @@ def search_images():
     model = request.args.get('model')
 
     query = f"{year} {make} {model} car"
-    
+
     subscription_key = "9c66d63084ff47dc99cbbb10b4d5dd9d"
     endpoint = "https://api.bing.microsoft.com/v7.0/images/search"
-    
+
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
-    params = {"q": query, "count": 3, "imageType": "Transparent"}  # Transparent para buscar imágenes PNG
+    # Transparent para buscar imágenes PNG
+    params = {"q": query, "count": 3, "imageType": "Transparent"}
 
     response = requests.get(endpoint, headers=headers, params=params)
 
@@ -734,24 +973,108 @@ def search_images():
         data = response.json()
         img_urls = [img['thumbnailUrl'] for img in data['value']]
         return jsonify(img_urls)
-    
+
     return jsonify(error="No se pudo obtener las imágenes"), 500
 
+
+# Suponiendo una lista de usuarios en lugar de una base de datos real
+usuarios = [
+    {'nombre': 'Bumbul', 'numero_telefono': '50585051703'},
+    {'nombre': 'Jhona', 'numero_telefono': '50581719517'},
+    {'nombre': 'Denisse', 'numero_telefono': '50581401626'},
+    {'nombre': 'Kairo', 'numero_telefono': '50577784430'}
+    # ... más usuarios
+]
+
+
+# def enviar_notificacion():
+
+#     for usuario in usuarios:
+#         numero_telefono = usuario['numero_telefono']
+#         # Mensaje personalizado
+#         mensaje_personalizado = f'''*Hola {usuario["nombre"]} WA WA WA*, este es un mensaje de OilWise, el servicio inteligente de cambio de aceite. 🚗\n
+# Hemos analizado el uso de tu vehículo y te recomendamos que realices un cambio de aceite pronto para mantenerlo en óptimas condiciones. ⚙️\n
+# Puedes programar tu cita con nosotros en este enlace: https://oilwise.com/cita\n
+# Además, nos gustaría saber tu opinión sobre nuestro servicio. ¿Te ha sido útil? ¿Qué podemos mejorar? Déjanos tu feedback en este otro enlace: https://oilwise.com/feedback\n
+# Gracias por confiar en OilWise, el servicio inteligente de cambio de aceite. 😊'''
+#         url = f'http://api.textmebot.com/send.php?recipient={numero_telefono}&apikey={API_KEY}&text={mensaje_personalizado}'
+#         response = requests.get(url)
+#         if response.status_code == 200:
+#             print(f'Mensaje enviado a {usuario["nombre"]}')
+#         else:
+#             print(f'Error al enviar el mensaje a {usuario["nombre"]}')
+#         # Esperar 5 segundos antes de enviar el siguiente mensaje
+#         time.sleep(10)
+
+def enviar_notificacion():
+
+    url = "https://graph.facebook.com/v17.0/103770299497358/messages"
+    headers = {
+        "Authorization": "EAAJRjmjgun8BO3ZC7m4kZB1MUHR2CdMlvfZChpnllsPaNTXf0jSmgY7bZBP2oRIruQZBhFMdBs3VhsnjDS7l6B5e5kepaw3zdi0K02T8CcLreRgFGIoKmEiIkkNm6pkO1hvOZBRS7XXLCizCWW2baZBy0exkS8kU712ZB8CaHuM4Llb0qpGN1Qj05ZCaqmSAZBMMKBDrFgZAo1yZA11y8CteVlW4x8vAVZBZClGa0yZAWK7XSIW7fQZD",
+        "Content-Type": "application/json"
+    }
+
+    for usuario in usuarios:
+
+        nombre = usuario['nombre']
+        numero_telefono = usuario['numero_telefono']
+
+        print(f"{nombre} {numero_telefono}")
+
+        data = {
+            "messaging_product": "whatsapp",
+            "to": f"{numero_telefono}",
+            "type": "template",
+            "template": {
+                "name": "recordatorio_aceite",
+                "language": {
+                    "code": "es_MX"
+                },
+                "components": [
+                    {
+                        "type": "header",
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": f"{nombre}"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        print("Status Code:", response.status_code)
+        print("Response:")
+        print(response.text)
+
+
+scheduler = BackgroundScheduler()
+# Ajusta la hora a la que deseas enviar la notificación
+trigger = CronTrigger(hour=10, minute=25)
+scheduler.add_job(enviar_notificacion, trigger=trigger)
+scheduler.start()
 
 
 # Logout
 @app.route('/Cerrar_Sesion')
 def Cerrar_Sesion():
-    # Clear session variables
+    # Cambiar el estado de la sesion a desconectado de cuenta osea 0
+    db = connectionBD()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""UPDATE estado_conexion
+SET estado = 0
+WHERE usuariosClientesId = '%s'""", (session['usuariosClientesId'],))
+    db.commit()
+    cursor.close()
     session.pop('usuariosClientesId', None)
     session.pop('Nombres', None)
     print("Sesión cerrada exitosamente")
     return redirect(url_for('home'))
 
 
-
 @app.route('/Cerrar_Sesion_Sistema')
-def Cerrar_Sesion_Sistema(): 
+def Cerrar_Sesion_Sistema():
     # Clear session variables
     session.pop('usersis_id', None)
     session.pop('Nombres', None)
@@ -761,14 +1084,9 @@ def Cerrar_Sesion_Sistema():
     return redirect(url_for('login_system'))
 
 
-
-
-
-#Print
-
+# Print
 # Ejecuta la aplicación Flask
 if __name__ == '__main__':
+    app.logger.setLevel(logging.DEBUG)  # Habilitar registros de nivel DEBUG
     app.run(host='0.0.0.0')
     app.run()
-
-

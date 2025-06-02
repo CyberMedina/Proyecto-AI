@@ -5,6 +5,11 @@
 
 {% block body %}
 {% block carousel %}{% endblock %}
+<style>
+    #carouselExampleCaptions {
+        display: none;
+    }    
+</style>
 
 <select id="year" name="year">
     <!-- Añadir opciones de año aquí -->
@@ -27,6 +32,44 @@
 <br>
 <div id="images-container"></div>
 
+<div id="carouselExampleCaptions" class="carousel slide">
+    <div class="carousel-indicators">
+      <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+      <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+      <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    </div>
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <img src="..." class="d-block w-100" alt="...">
+        <div class="carousel-caption d-none d-md-block">
+          <h5><button class="btn btn-danger">Seleccionar</button>l</h5>
+          <p>Some representative placeholder content for the first slide.</p>
+        </div>
+      </div>
+      <div class="carousel-item">
+        <img src="..." class="d-block w-100" alt="...">
+        <div class="carousel-caption d-none d-md-block">
+          <h5>Second slide label</h5>
+          <p>Some representative placeholder content for the second slide.</p>
+        </div>
+      </div>
+      <div class="carousel-item">
+        <img src="..." class="d-block w-100" alt="...">
+        <div class="carousel-caption d-none d-md-block">
+          <h5>Third slide label</h5>
+          <p>Some representative placeholder content for the third slide.</p>
+        </div>
+      </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
 
 
 <script>
@@ -76,14 +119,41 @@
         const year = document.getElementById('year').value;
         const make = document.getElementById('make').value;
         const model = document.getElementById('model').value;
-        
+    
         fetch(`/search_images?year=${year}&make=${make}&model=${model}`)
             .then(response => response.json())
             .then(data => {
-                const imagesContainer = document.getElementById('images-container');
-                imagesContainer.innerHTML = data.map(url => `<img src="${url}" alt="Car Image">`).join('');
+                const carouselInner = document.querySelector('#carouselExampleCaptions .carousel-inner');
+                carouselInner.innerHTML = '';
+    
+                data.forEach((url, index) => {
+                    const carouselItem = document.createElement('div');
+                    carouselItem.classList.add('carousel-item');
+                    if (index === 0) {
+                        carouselItem.classList.add('active');
+                    }
+    
+                    const img = document.createElement('img');
+                    img.classList.add('d-block', 'w-100');
+                    img.src = url;
+                    img.alt = 'Car Image';
+    
+                    const carouselCaption = document.createElement('div');
+                    carouselCaption.classList.add('carousel-caption', 'd-none', 'd-md-block');
+                    carouselCaption.innerHTML = `
+                        <h5>Slide ${index + 1} label</h5>
+                        <p>Some representative placeholder content for the slide.</p>
+                    `;
+    
+                    carouselItem.appendChild(img);
+                    carouselItem.appendChild(carouselCaption);
+                    carouselInner.appendChild(carouselItem);
+                });
+                // Mostrar el carrusel después de agregar imágenes
+            document.getElementById('carouselExampleCaptions').style.display = 'block';
             });
-    });    
+    });
+    
     
     
 </script>

@@ -14,8 +14,6 @@
           <div class="col-md-6">
             <div class="title d-flex align-items-center flex-wrap">
               <h2 class="mr-40">Asistencia IA</h2>
-              <button type="submit" class="main-btn primary-btn btn-hover btn-sm">
-                <i class="lni lni-plus mr-5"></i> Generar nuevo reporte</button>
             </div>
           </div>
           <!-- end col -->
@@ -47,7 +45,11 @@
                 <div class="invoice-for">
                   <h2 class="mb-10">Reportes</h2>
                   <p class="text-sm">
-                    
+                    <form action="" method="POST">
+                      <input type="text" name="pregunta_prompt">
+                      <button type="submit" class="main-btn primary-btn btn-hover btn-sm">
+                        <i class="lni lni-plus mr-5"></i>Buscar información</button>
+                    </form>
                   </p>
                 </div>
               </div>
