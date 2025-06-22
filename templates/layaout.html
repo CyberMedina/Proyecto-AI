@@ -79,7 +79,6 @@
                 <li class="li-icons"><a class="a-icon" href="#" data-bs-toggle="offcanvas"
                         data-bs-target="#offcanvasRight" aria-controls="offcanvasRight"><i
                             class="fa fa-shopping-cart"></i><span>1</span></a></li>
-                <li><a href="#"><i class="fa fa-heart"></i> <span>1</span></a></li>
                 <li>
                     {% if g.user_id %}
                     <div class="d-flex">
@@ -140,16 +139,6 @@
             <ul>
                 <li class="active"><a href="{{ url_for('home') }}">Inicio</a></li>
                 <li><a href="/templates/shop-grid.html">Tienda</a></li>
-                <li><a href="#">Servicios</a>
-                    <ul class="header__menu__dropdown">
-                        <li><a href="./shop-details.html">Shop Details</a></li>
-                        <li><a href="./shoping-cart.html">Shoping Cart</a></li>
-                        <li><a href="./checkout.html">Check Out</a></li>
-                        <li><a href="./blog-details.html">Blog Details</a></li>
-                    </ul>
-                </li>
-                <li><a href="{{ url_for('test') }}">Blog</a></li>
-                <li><a href="./contact.html">Contacto</a></li>
             </ul>
         </nav>
         <div id="mobile-menu-wrap"></div>
@@ -183,16 +172,6 @@
                         <ul>
                             <li class="active"><a href="{{ url_for('home') }}">Inicio</a></li>
                             <li><a href="{{ url_for('tienda') }}">Tienda</a></li>
-                            <li><a href="#">Servicios</a>
-                                <ul class="header__menu__dropdown">
-                                    <li><a href="./shop-details.html">Shop Details</a></li>
-                                    <li><a href="./shoping-cart.html">Shoping Cart</a></li>
-                                    <li><a href="./checkout.html">Check Out</a></li>
-                                    <li><a href="./blog-details.html">Blog Details</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="{{ url_for('test') }}">Blog</a></li>
-                            <li><a href="./contact.html">Contacto</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -201,9 +180,7 @@
                         <ul class="ul-icons">
                             <li class="li-icons"><a class="a-icon" href="#" data-bs-toggle="offcanvas"
                                     data-bs-target="#offcanvasRight" aria-controls="offcanvasRight"><i
-                                        class="fa fa-shopping-cart"></i> <span class="icons-span">1</span></a></li>
-                            <li class="li-icons"><a class="a-icon" href="#"><i class="fa fa-heart"></i> <span
-                                        class="icons-span">1</span></a></li>
+                                        class="fa fa-shopping-cart"></i></a></li>
                             <li class="li-icons">
                                 {% if g.user_id %}
                                 <div class="d-flex">

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="{{ url_for('static', filename='assets/images/logo/icono logo.png') }}"
+    type="image/x-icon" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+
+  <title>{% block title %}{% endblock %}</title>
+
+  <!-- ========== All CSS files linkup ========= -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/lineicons.css') }}" rel="stylesheet"
+    type="text/css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/materialdesignicons.min.css') }}"
+    rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/fullcalendar.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/fullcalendar.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/main.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/navbar_phone.css') }}">
+
+
+  {% block customCSS %}
+
+  {% endblock %}
+
+</head>
+
+<body>
+
+  {% block navmenu_phone %}
+  <div class="layout-wrapper layout-content-navbar">
+    <!-- Layout page -->
+    <div class="nav__menu" id="nav-menu">
+      <ul class="nav__list">
+        <li class="nav__item">
+          <a href="/clientes" class="nav__link active-link">
+            <i class='lni lni-users nav__icon'></i>
+            <span class="nav__name">Clientes</span>
+          </a>
+        </li>
+
+        <li class="nav__item">
+          <a href="/prestamos" class="nav__link">
+            <i class='lni lni-customer nav__icon'></i>
+            <span class="nav__name">Préstamos</span>
+          </a>
+        </li>
+
+        <li class="nav__item">
+          <a href="/" class="nav__link">
+            <i class='lni lni-money-location nav__icon'></i>
+            <span class="nav__name">Pagos</span>
+          </a>
+        </li>
+
+        <li class="nav__item">
+          <a href="/chats_clientes" class="nav__link">
+            <i class='lni lni-envelope nav__icon'></i>
+            <span class="nav__name">Chats</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+
+  </div>
+  {% endblock %}
+
+  <!-- ======== Preloader =========== -->
+  <div id="preloader">
+    <div class="spinner"></div>
+  </div>
+  <!-- ======== Preloader =========== -->
+
+  
+  <main class="main-wrapper">
+    <!-- ========== header start ========== -->
+    {% block header %}
+    <header class="header">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-5 col-md-5 col-6">
+            <div class="header-left d-flex align-items-center">
+              <div class="menu-toggle-btn mr-15">
+                <button id="menu-toggle" class="main-btn primary-btn btn-hover">
+                  <i class="lni lni-chevron-left me-2"></i> Menu
+                </button>
+              </div>
+              <!-- <div class="header-search d-none d-md-flex">
+                <form action="#">
+                  <input type="text" placeholder="Buscar cliente..." />
+                  <button><i class="lni lni-search-alt"></i></button>
+                </form>
+              </div> -->
+            </div>
+          </div>
+
+
+
+          <div class="col-lg-7 col-md-7 col-6">
+            <div class="header-right">
+              <!-- notification start -->
+              <!-- <div class="notification-box ml-15 d-none d-md-flex">
+                <button class="dropdown-toggle" type="button" id="notification" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M11 20.1667C9.88317 20.1667 8.88718 19.63 8.23901 18.7917H13.761C13.113 19.63 12.1169 20.1667 11 20.1667Z"
+                      fill="" />
+                    <path
+                      d="M10.1157 2.74999C10.1157 2.24374 10.5117 1.83333 11 1.83333C11.4883 1.83333 11.8842 2.24374 11.8842 2.74999V2.82604C14.3932 3.26245 16.3051 5.52474 16.3051 8.24999V14.287C16.3051 14.5301 16.3982 14.7633 16.564 14.9352L18.2029 16.6342C18.4814 16.9229 18.2842 17.4167 17.8903 17.4167H4.10961C3.71574 17.4167 3.5185 16.9229 3.797 16.6342L5.43589 14.9352C5.6017 14.7633 5.69485 14.5301 5.69485 14.287V8.24999C5.69485 5.52474 7.60672 3.26245 10.1157 2.82604V2.74999Z"
+                      fill="" />
+                  </svg>
+                  <span></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notification">
+                  <li>
+                    <a href="#0">
+                      <div class="image">
+                        <img src="assets/images/lead/lead-6.png" alt="" />
+                      </div>
+                      <div class="content">
+                        <h6>
+                          John Doe
+                          <span class="text-regular">
+                            comment on a product.
+                          </span>
+                        </h6>
+                        <p>
+                          Lorem ipsum dolor sit amet, consect etur adipiscing
+                          elit Vivamus tortor.
+                        </p>
+                        <span>10 mins ago</span>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#0">
+                      <div class="image">
+                        <img src="assets/images/lead/lead-1.png" alt="" />
+                      </div>
+                      <div class="content">
+                        <h6>
+                          Jonathon
+                          <span class="text-regular">
+                            like on a product.
+                          </span>
+                        </h6>
+                        <p>
+                          Lorem ipsum dolor sit amet, consect etur adipiscing
+                          elit Vivamus tortor.
+                        </p>
+                        <span>10 mins ago</span>
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+              </div> -->
+              <!-- notification end -->
+              <!-- message start -->
+              <!-- profile start -->
+              <div class="profile-box ml-15">
+                <button class="dropdown-toggle bg-transparent border-0" type="button" id="profile"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="profile-info">
+                    <div class="info">
+                      <div class="image">
+                        <img
+                          src="https://ui-avatars.com/api/?name={{ session['nombre_persona'] }}+{{ session['apellido_persona'] }}/?rounded=true&size=128"
+                          alt="" />
+                      </div>
+                      <div>
+                        <h6 class="fw-500">{{ session['nombre_persona'] }} {{ session['apellido_persona'] }}</h6>
+                        <p>{{ session['nombre_rol'] }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profile">
+
+                  <li>
+                    <a href="#" onclick="configuracionTasaCambio();"><i class="lni lni-dollar"></i>Tasa de cambio</a>
+                  </li>
+                  <li>
+                    <a href="#0" id="toggleCheckboxLink"> <i class="fa-regular fa-circle-half-stroke"></i></i>
+                      Modo:<span id="modoLuz"></span> </a>
+                  </li>
+                  <li>
+                    <a href="/base_de_datos"> <i class="lni lni-cog"></i> Configuración </a>
+                  </li>
+
+                  <li class="divider"></li>
+                  <li>
+                    <a href="/Cerrar_Sesion"> <i class="lni lni-exit"></i> Cerrar sesión </a>
+                  </li>
+                </ul>
+              </div>
+              <!-- profile end -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- ========== header end ========== -->
+    {% endblock %}
+
+    {% block body %}{% endblock %}
+
+  </main>
+
+  <!-- ============ Theme Option Start ============= -->
+  <div class="btn-theme" hidden>
+    <div class="container">
+      <label class="toggle" for="switch">
+        <input id="switch" class="input" type="checkbox" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+          aria-controls="offcanvasRight" />
+        <div class="icon">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+
+
+      </label>
+    </div>
+
+  </div>
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasRightLabel">Offcanvas right</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      ...
+    </div>
+  </div>
+
+  <!-- ModalThree start -->
+  <div class="warning-modal">
+    <div class="modal fade" id="modalTasaCambio" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content card-style">
+          <div class="modal-header px-0 border-0">
+            <h3 class="text-bold">Configuración tasa de cambio</h3>
+            <button class="border-0 bg-transparent h1" data-bs-dismiss="modal">
+              <i class="lni lni-cross-circle"></i>
+            </button>
+          </div>
+          <div class="modal-body px-0">
+            <div class="content mb-30">
+              <h5 class="mb-4">Tasa de cambio dólares a córdobas</h5>
+              <div class="row">
+
+                <div class="col-sm-4">
+                  <div class="input-style-3">
+                    <label>Dólar estadounidense</label>
+                    <input type="text" value="1 " pattern="[0-9]*[.,]?[0-9]*" inputmode="decimal" name="inputTasaCambio"
+                      id="inputTasaCambio" readonly />
+                    <span class="icon" id="" style="margin-left: 0rem;  margin-top: 2rem">$</span>
+                    <!-- Aquí se mostrará el porcentaje -->
+                  </div>
+                  <!-- end select -->
+                </div>
+
+                <div class="col-sm-2">
+                  <div class="input-style-1 text-center">
+                    <label>Equivale</label>
+                    <input class="text-center" type="text" placeholder="" value="=" readonly>
+                  </div>
+                  <!-- end select -->
+                </div>
+
+
+                <div class="col-sm-6">
+                  <div class="input-style-3">
+                    <label class="text-success">Córdobas Nicaraguenses</label>
+                    <input class="text-success" type="text" placeholder="" value="" pattern="[0-9]*[.,]?[0-9]*"
+                      inputmode="decimal" name="inputTasaCambioCordobas" id="inputTasaCambioCordobas" />
+                    <span class="icon text-success" id="" style="margin-left: 0rem;  margin-top: 2rem">C$</span>
+                    <!-- Aquí se mostrará el porcentaje -->
+                  </div>
+                  <!-- end select -->
+                </div>
+
+
+              </div>
+              <div class="action d-flex flex-wrap justify-content-end">
+                <button data-bs-dismiss="modal" class="main-btn btn-sm danger-btn-outline btn-hover m-1">
+                  Cancelar
+                </button>
+                <button onclick="actualizar_tasa_interes(event);" class="main-btn btn-sm primary-btn btn-hover m-1">
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ModalThree End -->
+  <!-- ============ Theme Option End ============= -->
+
+
+  <!-- ========= All Javascript files linkup ======== -->
+  <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/Chart.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/dynamic-pie-chart.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/moment.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/fullcalendar.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/jvectormap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/world-merc.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/polyfill.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+  <script src="https://kit.fontawesome.com/9b8b75d2fb.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+    integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+    crossorigin="anonymous"></script>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const toggleCheckboxLink = document.getElementById("toggleCheckboxLink");
+      const checkbox = document.getElementById("switch");
+
+      // Agregar evento de clic al enlace
+      toggleCheckboxLink.addEventListener("click", function (event) {
+        event.preventDefault(); // Evitar el comportamiento predeterminado del enlace
+
+        // Cambiar el estado del checkbox
+        checkbox.checked = !checkbox.checked;
+      });
+    });
+  </script>
+
+  {% block customJS %}{% endblock %}
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('{{ url_for('static', filename='service-worker.js') }}')
+        .then(registration => {
+          console.log('Service Worker registrado con éxito:', registration);
+        })
+        .catch(error => {
+          console.log('Error al registrar el Service Worker:', error);
+        });
+    }
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Obtener la URL actual
+      const currentUrl = window.location.pathname;
+
+      // Seleccionar todos los elementos de menú en la primera navbar
+      const menuItems1 = document.querySelectorAll(".menu-item");
+
+      // Recorrer todos los elementos de menú de la primera navbar
+      menuItems1.forEach(item => {
+        // Obtener el enlace dentro del elemento de menú
+        const link = item.querySelector("a");
+
+        // Verificar si la URL del enlace coincide con la URL actual
+        if (link.getAttribute("href") === currentUrl) {
+          // Agregar la clase "active" al elemento de menú
+          item.classList.add("active");
+        } else {
+          // Asegurarse de que los demás elementos no tengan la clase "active"
+          item.classList.remove("active");
+        }
+      });
+
+      // Seleccionar todos los elementos de menú en la segunda navbar
+      const menuItems2 = document.querySelectorAll(".nav__item");
+
+      // Recorrer todos los elementos de menú de la segunda navbar
+      menuItems2.forEach(item => {
+        // Obtener el enlace dentro del elemento de menú
+        const link = item.querySelector("a");
+
+        // Verificar si la URL del enlace coincide con la URL actual
+        if (link.getAttribute("href") === currentUrl) {
+          // Agregar la clase "active-link" al enlace
+          link.classList.add("active-link");
+        } else {
+          // Asegurarse de que los demás enlaces no tengan la clase "active-link"
+          link.classList.remove("active-link");
+        }
+      });
+
+      // Seleccionar todos los elementos de menú con la clase "nav-item"
+      const menuItems3 = document.querySelectorAll(".nav-item");
+
+      // Recorrer todos los elementos de menú con la clase "nav-item"
+      menuItems3.forEach(item => {
+        // Obtener el enlace dentro del elemento de menú
+        const link = item.querySelector("a");
+
+        // Verificar si la URL del enlace coincide con la URL actual
+        if (link.getAttribute("href") === currentUrl) {
+          // Agregar la clase "active" al elemento de menú
+          item.classList.add("active");
+        } else {
+          // Asegurarse de que los demás elementos no tengan la clase "active"
+          item.classList.remove("active");
+        }
+      });
+    });
+  </script>
+</body>
+
+
+</html>
