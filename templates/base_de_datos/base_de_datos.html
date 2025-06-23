@@ -1,0 +1,382 @@
+{% extends 'layout.html' %}
+
+
+{% block title %}Configuración{% endblock %}
+
+{% block customCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom_toast/custom_toast.css') }}">
+{% endblock %}
+
+{% block body %}
+  {% block header %}
+  {% endblock %}
+  
+  {% block navmenu_phone %}
+  {% endblock %}
+
+  {% block sidebar %}
+  {% endblock %}
+
+<style>
+  .scrollable-content {
+    max-height: 300px;
+    /* Ajusta esta altura según tus necesidades */
+    overflow-y: auto;
+    padding-right: 15px;
+    /* Para evitar problemas de scrollbar */
+  }
+
+  .dropdown-toggle::after {
+    display: none !important;
+    content: 0 !important;
+  }
+
+  #backupBaseDeDatos {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  @media (max-width: 767px) {
+    #backupBaseDeDatos .kanban-header-members {
+      margin-bottom: -0px !important;
+    }
+  }
+</style>
+
+
+
+
+  <div class="container-fluid">
+    <!-- ========== title-wrapper start ========== -->
+    <div class="title-wrapper pt-30">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <div class="title">
+            <h2>Configuración</h2>
+          </div>
+        </div>
+        <!-- end col -->
+        <div class="col-md-6">
+          <div class="breadcrumb-wrapper">
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item" aria-current="page">
+                  <a href="/"> Dashboard </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                  Configuración
+                </li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+        <!-- end col -->
+      </div>
+      <!-- end row -->
+    </div>
+    <!-- ========== title-wrapper end ========== -->
+
+    <!-- ========== kanban header start ========== -->
+    <div class="kanban-header">
+      <div class="kanban-header-members">
+        <button class="add-member-button text-gray">
+          <i class="fa-solid fa-database"></i>
+          Backup de base de datos
+        </button>
+      </div>
+      <div class="add-task-button">
+        <button class="btn primary-btn" data-bs-toggle="modal" data-bs-target="#ModalThree">
+          <i class="fa-solid fa-screwdriver-wrench"></i> Gestionar
+        </button>
+      </div>
+    </div>
+    <!-- ========== kanban header end ========== -->
+
+    <!-- ModalThree start -->
+    <div class="warning-modal">
+      <div class="modal fade" id="ModalThree" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content card-style">
+            <div class="modal-header px-0 border-0">
+              <h5 class="text-bold">Gestión de base de datos</h5>
+              <button class="border-0 bg-transparent h1" data-bs-dismiss="modal">
+                <i class="lni lni-cross-circle"></i>
+              </button>
+            </div>
+            <div class="modal-body px-0">
+              <div class="content mb-30">
+                <div class="row">
+                  <div class="col">
+                    <div class="task-modal-left">
+                      <div class="select-style-1">
+                        <h6 class="mb-2">Tipo de gestión</h6>
+                        <div class="select-position">
+                          <select class="light-bg" id="comboTipoGestion">
+                            <option value="">Seleccione la gestión</option>
+                            <option value="Exportar">Exportar / Importar en línea</option>
+                            <option value="Importar/restaurar">Exportar / Importar local</option>
+                            <option value="Backups automáticos">Backups automáticos</option>
+                          </select>
+                        </div>
+                      </div>
+
+
+
+
+                      <!-- INICIA SECCION DE EXPORTAR -->
+                      <section id="seccionExportar" hidden>
+                        <div class="container mb-3">
+                          <div class="row">
+                            <button onclick="iniciarBackup()" 
+                              class="main-btn primary-btn-light rounded-full btn-hover m-1 col-md-12 offset-md-8">
+                              <i class="lni lni-plus"></i>
+                              Realizar nuevo respaldo
+                            </button>
+                          </div>
+                        </div>
+
+                        <h6 class="mb-2">Backup más reciente</h6>
+                        <div class="kanban-header" id="backupBaseDeDatos">
+                          <div class="kanban-header-members">
+                            <div class="add-member-button text-gray">
+                              <i class="fa-solid fa-database"></i>
+                              {% if backups_files %}
+                              Backup del día {{
+                              backups_files[0]['fileDate'] }}
+                              {% else %}
+                              No hay backups
+                              {% endif %}
+                            </div>
+                          </div>
+                          <div class="add-task-button">
+                            <div class="more-btn-wrapper">
+                              <button class="more-btn dropdown-toggle border-0 bg-transparent" id="moreAction"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="lni lni-more-alt"></i>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end px-1" aria-labelledby="moreAction">
+                                <li class="dropdown-item">
+                                  <a href="#" onclick="iniciarRestauracion('{{ backups_files[0]['import_link'] }}'); return false;"
+                                    class="text-gray text-sm" style="margin-right: 1px !important;">
+                                    <i class="fa-solid fa-file-import"></i>
+                                    Importar
+                                  </a>
+                                </li>
+                                {% if backups_files %}
+                                <li class="dropdown-item">
+                                  <a href="{{ backups_files[0]['download_link'] }}" target="_blank"
+                                    class="text-gray text-sm" style="margin-right: 1px !important;">
+                                    <i class="fa-solid fa-download"></i>
+                                    Ver / Descargar
+                                  </a>
+                                </li>
+                                {% endif %}
+                                {% if backups_files %}
+                                <li class="dropdown-item">
+                                  <a href="{{ backups_files[0]['delete_link'] }}" class="text-gray text-sm">
+                                    <i class="fa-solid fa-trash"></i>
+                                    Eliminar
+                                  </a>
+                                </li>
+                                {% endif %}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+
+
+                        <h6 class="mb-2">Historial de backups</h6>
+                        <hr class="my-3">
+                        <div id="historial-backups">
+                            <!-- Aquí se cargarán los backups adicionales -->
+                        </div>
+                        <div class="text-center mt-3">
+                            <button id="cargarMasBackups" class="main-btn primary-btn-outline rounded-md btn-hover">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                Cargar historial completo
+                            </button>
+                        </div>
+
+
+
+                      </section>
+                      <!-- TERMINA SECCION DE EXPORTAR -->
+                      <form action="/importar_backup" method="POST" enctype="multipart/form-data">
+                        <!-- INICIA SECCION IMPORTAR -->
+                        <section id="seccionImportar" hidden>
+                          <div class="col-12">
+                            <div class="input-style-3">
+                              <label>Importar backup SQL</label>
+                              <input type="file" placeholder="" accept="" name="sql_backup" id="sql_backup" />
+                              <span class="icon"><i class="fa-solid fa-database"></i></span>
+                            </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-6">
+                              <button type="button" data-bs-dismiss="modal" class="btn btn-danger w-100">
+                                Cancelar
+                              </button>
+                            </div>
+                            <div class="col-6">
+                              <button type="submit" class="btn btn-primary w-100">
+                                <i class="lni lni-plus me-1 text-sm text-bold"></i>
+                                Realizar
+                              </button>
+                            </div>
+                          </div>
+                        </section>
+                        <!-- TERMINA SECCION IMPORTAR -->
+                      </form>
+
+
+
+                      <form action="/importar_backup" method="POST" enctype="multipart/form-data">
+                        <!-- INICIA SECCION BACKUPS AUTOMATICOS -->
+                        <section id="seccionBackupsAutomaticos" hidden>
+                          <div class="row">
+
+                            <div class="col-4">
+                              <div class="select-style-1">
+                                <label>Intervalo de tiempo</label>
+                                <div class="select-position">
+                                  <select>
+                                    <option value="">Seleccione</option>
+                                    <option value="">Días</option>
+                                    <option value="">Semanas</option>
+                                    <option value="">Meses</option>
+                                    <option value="">Años</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <!-- end select -->
+                            </div>
+
+                            <div class="col-4">
+                              <div class="select-style-1">
+                                <label>Cantidad</label>
+                                <div class="select-position">
+                                  <select>
+                                    <option value="">Seleccione</option>
+                                    <option value="">Días</option>
+                                    <option value="">Semanas</option>
+                                    <option value="">Meses</option>
+                                    <option value="">Años</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <!-- end select -->
+                            </div>
+
+                            <div class="field-group mb-20">
+                              <label for="" class="text-sm text-gray block mb-10">
+                                Enter Your Money
+                              </label>
+                              <div class="input-group">
+                                <input type="text" placeholder="10000" />
+                                <div class="select-style-1 mb-0">
+                                  <div class="select-position">
+                                    <select>
+                                      <option value="">USD</option>
+                                      <option value="">XMR</option>
+                                      <option value="">BTC</option>
+                                      <option value="">LTC</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                          </div>
+
+                          <div class="row">
+                            <div class="col-6">
+                              <button type="button" data-bs-dismiss="modal" class="btn btn-danger w-100">
+                                Cancelar
+                              </button>
+                            </div>
+                            <div class="col-6">
+                              <button type="submit" class="btn btn-primary w-100">
+                                <i class="lni lni-plus me-1 text-sm text-bold"></i>
+                                Realizar
+                              </button>
+                            </div>
+                          </div>
+                        </section>
+                        <!-- TERMINA SECCION BACKUPS AUTOMATICOS -->
+                      </form>
+
+
+
+                    </div>
+                    <div class="action d-flex flex-wrap justify-content-end">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ModalThree End -->
+
+    <!-- Modal de Progreso de Backup -->
+    <div class="warning-modal">
+      <div class="modal fade" id="modalBackupProgress" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content card-style">
+            <div class="modal-header px-0 border-0">
+              <h5 class="text-bold">Realizando respaldo de la base de datos</h5>
+            </div>
+            <div class="modal-body px-0">
+              <div class="content">
+                <div class="progress-wrapper">
+                  <div class="progress-item blue-light-bg-light progress-item-lg">
+                    <div id="backupProgressBar" class="progress-item-bar blue-light-bg" style="width: 0%">0%</div>
+                  </div>
+                </div>
+                <p id="backupStatus" class="text-center mt-3">Iniciando respaldo...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ======== add task modal end =========== -->
+
+  <input type="hidden" id="access_token" value="{{ session.get('access_token', '') }}">
+
+  <script src="{{ url_for('static', filename= 'assets/js/base_de_datos/base_de_datos.js') }}"></script>
+  <script src="{{ url_for('static', filename= 'assets/js/custom_toast/custom_toast.js') }}"></script>
+
+  {% block customJS %}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Crear el elemento de audio
+      var audio = new Audio('{{ url_for('static', filename= 'assets/audio/307_GTS.mp3') }}');
+      audio.loop = true; // Habilitar la reproducción en loop
+      
+      // Reproducir audio después de la primera interacción del usuario
+      document.addEventListener('click', function iniciarAudio() {
+        audio.play().catch(function(error) {
+          console.log("Error al reproducir audio:", error);
+        });
+        // Mostrar toast con el nombre de la canción
+        createToast('info', 'Reproduciendo: Pokémon B&W GTS', 5000, 'bottom-right');
+        // Remover el event listener después de la primera reproducción
+        document.removeEventListener('click', iniciarAudio);
+      }, { once: true });
+    });
+  </script>
+
+
+  {% endblock %}
+
+
+
+
+  {% endblock %}
