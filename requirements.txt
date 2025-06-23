@@ -10,11 +10,14 @@ beautifulsoup4
 blinker
 cachelib
 certifi
+cffi
 charset-normalizer
 click
 colorama
+cryptography
 dataclasses-json
 debug-tools
+dropbox
 Flask
 Flask-Cors
 Flask-Login
@@ -42,13 +45,13 @@ numpy
 odsclient
 openai
 packaging
+ply
 protobuf
+pycparser
 pydantic
 pydantic_core
 PyJWT
-PyMuPDF
-PyMuPDFb
-PyPDF2
+PyMySQL
 python-dotenv
 pytz
 PyYAML
@@ -58,6 +61,7 @@ six
 sniffio
 soupsieve
 SQLAlchemy
+stone
 tenacity
 tqdm
 twilio
@@ -68,5 +72,4 @@ tzdata
 tzlocal
 urllib3
 Werkzeug
-WTForms
 yarl
