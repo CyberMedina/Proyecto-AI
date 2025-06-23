@@ -1,10 +1,7 @@
-import hashlib
 import logging
-import re
 import requests
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session, g
 from flask_session import Session
-from flask_mysqldb import MySQL, MySQLdb
 import mysql.connector
 from werkzeug.security import check_password_hash, generate_password_hash
 # Dependencia utilizada para redirigir hacia modals
@@ -12,47 +9,25 @@ from urllib.parse import urlencode
 from config import connectionBD
 from helpers import in_session, login_requiredUser_system, obtener_detalles_productos, upload_to_dropbox, obtener_str_fecha_hora
 import os
-import openai
-from decimal import Decimal
-from bs4 import BeautifulSoup
-from flask_cors import cross_origin, CORS
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-from twilio.rest import Client
-from heyoo import WhatsApp
 import time
 import json
-import fitz
-from pprint import pprint
-from PyPDF2 import PdfReader
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from langchain.agents import create_sql_agent
-from langchain.agents.agent_toolkits import SQLDatabaseToolkit
-from langchain.sql_database import SQLDatabase
-from langchain.llms.openai import OpenAI
-from langchain.agents import AgentExecutor
-from langchain.agents.agent_types import AgentType
-from langchain.chat_models import ChatOpenAI
 from sqlalchemy import MetaData, text
 from sqlalchemy.schema import CreateTable
 from sqlalchemy.exc import SQLAlchemyError
 import dropbox
-from dropbox.files import FileMetadata
-from dropbox.exceptions import AuthError
-from dropbox import Dropbox
 import tempfile
 import io
 import os
 from multiprocessing import Process, Queue
 from flask import Response, stream_with_context
+from flask_cors import cross_origin
 
 
 from database_connection import engine, db_session
 from helpers import get_most_recent_sql_file, obtener_enlace_descarga, convertir_fecha, get_most_recent_sql_file, obtener_enlace_descarga, convertir_fecha, get_latest_sql_file, get_all_sql_files
 
 
-from odsclient import ODSClient
 
 
 load_dotenv()
@@ -1261,78 +1236,78 @@ def home_system():
     return render_template('home_system.html')
 
 
-@app.route('/asistencia_ia', methods=['GET', 'POST'])
-@login_requiredUser_system
-def asistencia_ia():
+# @app.route('/asistencia_ia', methods=['GET', 'POST'])
+# @login_requiredUser_system
+# def asistencia_ia():
 
-    if request.method == 'POST':
-        #         # Establecer la clave de la API de ChatGPT (Se hace con el .env variable de entorno)
-        # openai.api_key = os.getenv("OPENAI_API_KEY")
+#     if request.method == 'POST':
+#         #         # Establecer la clave de la API de ChatGPT (Se hace con el .env variable de entorno)
+#         # openai.api_key = os.getenv("OPENAI_API_KEY")
 
-        # # Crear una variable para el prompt
-        # prompt = "Eres un asistente para el negocio Lubicentro dos hermanos y crearás un reporte de la cantidad de productos: "
-        # # Crear una variable para la consulta a la base de datos
-        # query = """SELECT p.id_producto, p.nombre AS nombre_producto, p.descripcion, p.precio, u.nombre AS unidad_medida, c.nombre AS categoria
-        # FROM productos p
-        # JOIN unidades_medida u ON p.unidad_medida_id = u.id_unidad
-        # JOIN categorias c ON p.categoria_id = c.id_categoria
-        # ORDER BY p.nombre ASC"""
-        pregunta_prompt = request.form["pregunta_prompt"]
+#         # # Crear una variable para el prompt
+#         # prompt = "Eres un asistente para el negocio Lubicentro dos hermanos y crearás un reporte de la cantidad de productos: "
+#         # # Crear una variable para la consulta a la base de datos
+#         # query = """SELECT p.id_producto, p.nombre AS nombre_producto, p.descripcion, p.precio, u.nombre AS unidad_medida, c.nombre AS categoria
+#         # FROM productos p
+#         # JOIN unidades_medida u ON p.unidad_medida_id = u.id_unidad
+#         # JOIN categorias c ON p.categoria_id = c.id_categoria
+#         # ORDER BY p.nombre ASC"""
+#         pregunta_prompt = request.form["pregunta_prompt"]
 
-        # 1. Cargar la bbdd con langchain
+#         # 1. Cargar la bbdd con langchain
 
-        db = SQLDatabase.from_uri(
-            "mysql://root:1233456@localhost:3306/proyectoIA")
+#         db = SQLDatabase.from_uri(
+#             "mysql://root:1233456@localhost:3306/proyectoIA")
 
-        # 2. Importar las APIs
+#         # 2. Importar las APIs
 
-        os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+#         os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
-        # 3. Crear el LLM
+#         # 3. Crear el LLM
 
-        toolkit = SQLDatabaseToolkit(db=db, llm=OpenAI(temperature=0))
+#         toolkit = SQLDatabaseToolkit(db=db, llm=OpenAI(temperature=0))
 
-        agent_executor = create_sql_agent(
-            llm=ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
-            toolkit=toolkit,
-            verbose=True,
-            agent_type=AgentType.OPENAI_FUNCTIONS
-        )
+#         agent_executor = create_sql_agent(
+#             llm=ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
+#             toolkit=toolkit,
+#             verbose=True,
+#             agent_type=AgentType.OPENAI_FUNCTIONS
+#         )
 
-        resultado = agent_executor.run(pregunta_prompt)
+#         resultado = agent_executor.run(pregunta_prompt)
 
-        return render_template("asistenciaIA.html", response=resultado)
+#         return render_template("asistenciaIA.html", response=resultado)
 
-        # llm = ChatOpenAI(temperature=0,model_name='gpt-3.5-turbo')
+#         # llm = ChatOpenAI(temperature=0,model_name='gpt-3.5-turbo')
 
-        # # 4. Crear la cadena
-        # cadena = SQLDatabase(llm = llm, database = db, verbose=False)
+#         # # 4. Crear la cadena
+#         # cadena = SQLDatabase(llm = llm, database = db, verbose=False)
 
-        # # 5. Formato personalizado de respuesta
-        # formato = """
-        # Data una pregunta del usuario:
-        # 1. crea una consulta de sqlite3
-        # 2. revisa los resultados
-        # 3. devuelve el dato
-        # 4. si tienes que hacer alguna aclaración o devolver cualquier texto que sea siempre en español
-        # #{question}
-        # """
+#         # # 5. Formato personalizado de respuesta
+#         # formato = """
+#         # Data una pregunta del usuario:
+#         # 1. crea una consulta de sqlite3
+#         # 2. revisa los resultados
+#         # 3. devuelve el dato
+#         # 4. si tienes que hacer alguna aclaración o devolver cualquier texto que sea siempre en español
+#         # #{question}
+#         # """
 
-        # # 6. Función para hacer la consulta
+#         # # 6. Función para hacer la consulta
 
-        # def consulta(pregunta_prompt):
-        #     consulta = formato.format(question = pregunta_prompt)
-        #     resultado = cadena.run(consulta)
-        #     print(resultado)
+#         # def consulta(pregunta_prompt):
+#         #     consulta = formato.format(question = pregunta_prompt)
+#         #     resultado = cadena.run(consulta)
+#         #     print(resultado)
 
-        # consulta(pregunta_prompt)
+#         # consulta(pregunta_prompt)
 
-    return render_template('asistenciaIA.html', response="")
+#     return render_template('asistenciaIA.html', response="")
 
 
-@app.route('/test', methods=['GET', 'POST'])
-@cross_origin()
-def test():
+# @app.route('/test', methods=['GET', 'POST'])
+# @cross_origin()
+# def test():
 
     # subscription_key = '9c66d63084ff47dc99cbbb10b4d5dd9d'
 
@@ -1703,54 +1678,54 @@ usuarios = [
 #         # Esperar 5 segundos antes de enviar el siguiente mensaje
 #         time.sleep(10)
 
-def enviar_notificacion():
+# def enviar_notificacion():
 
-    url = "https://graph.facebook.com/v17.0/103770299497358/messages"
-    headers = {
-        "Authorization": "EAAJRjmjgun8BO3ZC7m4kZB1MUHR2CdMlvfZChpnllsPaNTXf0jSmgY7bZBP2oRIruQZBhFMdBs3VhsnjDS7l6B5e5kepaw3zdi0K02T8CcLreRgFGIoKmEiIkkNm6pkO1hvOZBRS7XXLCizCWW2baZBy0exkS8kU712ZB8CaHuM4Llb0qpGN1Qj05ZCaqmSAZBMMKBDrFgZAo1yZA11y8CteVlW4x8vAVZBZClGa0yZAWK7XSIW7fQZD",
-        "Content-Type": "application/json"
-    }
+#     url = "https://graph.facebook.com/v17.0/103770299497358/messages"
+#     headers = {
+#         "Authorization": "EAAJRjmjgun8BO3ZC7m4kZB1MUHR2CdMlvfZChpnllsPaNTXf0jSmgY7bZBP2oRIruQZBhFMdBs3VhsnjDS7l6B5e5kepaw3zdi0K02T8CcLreRgFGIoKmEiIkkNm6pkO1hvOZBRS7XXLCizCWW2baZBy0exkS8kU712ZB8CaHuM4Llb0qpGN1Qj05ZCaqmSAZBMMKBDrFgZAo1yZA11y8CteVlW4x8vAVZBZClGa0yZAWK7XSIW7fQZD",
+#         "Content-Type": "application/json"
+#     }
 
-    for usuario in usuarios:
+#     for usuario in usuarios:
 
-        nombre = usuario['nombre']
-        numero_telefono = usuario['numero_telefono']
+#         nombre = usuario['nombre']
+#         numero_telefono = usuario['numero_telefono']
 
-        print(f"{nombre} {numero_telefono}")
+#         print(f"{nombre} {numero_telefono}")
 
-        data = {
-            "messaging_product": "whatsapp",
-            "to": f"{numero_telefono}",
-            "type": "template",
-            "template": {
-                "name": "recordatorio_aceite",
-                "language": {
-                    "code": "es_MX"
-                },
-                "components": [
-                    {
-                        "type": "header",
-                        "parameters": [
-                            {
-                                "type": "text",
-                                "text": f"{nombre}"
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
-        response = requests.post(url, headers=headers, data=json.dumps(data))
-        print("Status Code:", response.status_code)
-        print("Response:")
-        print(response.text)
+#         data = {
+#             "messaging_product": "whatsapp",
+#             "to": f"{numero_telefono}",
+#             "type": "template",
+#             "template": {
+#                 "name": "recordatorio_aceite",
+#                 "language": {
+#                     "code": "es_MX"
+#                 },
+#                 "components": [
+#                     {
+#                         "type": "header",
+#                         "parameters": [
+#                             {
+#                                 "type": "text",
+#                                 "text": f"{nombre}"
+#                             }
+#                         ]
+#                     }
+#                 ]
+#             }
+#         }
+#         response = requests.post(url, headers=headers, data=json.dumps(data))
+#         print("Status Code:", response.status_code)
+#         print("Response:")
+#         print(response.text)
 
 
-scheduler = BackgroundScheduler()
-# Ajusta la hora a la que deseas enviar la notificación
-trigger = CronTrigger(hour=10, minute=25)
-scheduler.add_job(enviar_notificacion, trigger=trigger)
-scheduler.start()
+# scheduler = BackgroundScheduler()
+# # Ajusta la hora a la que deseas enviar la notificación
+# trigger = CronTrigger(hour=10, minute=25)
+# scheduler.add_job(enviar_notificacion, trigger=trigger)
+# scheduler.start()
 
 
 # Logout
