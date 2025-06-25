@@ -72,7 +72,7 @@
     <div class="humberger__menu__overlay"></div>
     <div class="humberger__menu__wrapper">
         <div class="humberger__menu__logo">
-            <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='img/Hermanos2.png') }}" alt=""></a>
+            <a href="{{ url_for('home') }}"><img src="/static/img/banner/logo_uno.png" alt=""></a>
         </div>
         <div class="humberger__menu__cart">
             <ul>
@@ -143,14 +143,14 @@
         </nav>
         <div id="mobile-menu-wrap"></div>
         <div class="header__top__right__social">
-            <a href="https://www.facebook.com/lubricentro2hermanos"><i class="fa fa-facebook"></i></a>
+            <a href="#"><i class="fa fa-facebook"></i></a>
             <a
                 href="https://l.facebook.com/l.php?u=https%3A%2F%2Fapi.whatsapp.com%2Fsend%3Fphone%3D%252B50557060588%26data%3DARAPZAbLKbDnZwnsHbnTH5A4q6ICQbK738TqAdVTkG1W8RPET3fv7u-nGJFpEZvixh1kLKLY7LQrNbbQ-9SLEql7x-3GFqBWcSHYbmYY6X0RRx-0L3Mhl7FElWPwOwdQoMm5NveebSwvVZEHP8BH50RL3A%26source%3DFB_Page%26app%3Dfacebook%26entry_point%3Dpage_cta%26fbclid%3DIwAR2Z1d2xPl7bFdvdjQJmIShJZTIlCVx6RG-TZkPZ5dKz3AMiJ0KZLkefFz8&h=AT1v57PKZPvQFNzN-INOPylKdJCTPK3sSXpR0qYnrugSZnRxpYphR_Z_Iniuf-0ahI27L0iKlyPwf5vWixcPIfHA2VlRYcynshshyc4K1gTypBpx9RaT34LCKdivLZuPG1hiDr1vmFl0ZmLZmu6ywA"><i
                     class="fa fa-whatsapp"></i></a>
         </div>
         <div class="humberger__menu__contact">
             <ul>
-                <li><i class="fa fa-envelope"></i> lubricentro2hermanos@gmail.com</li>
+                <li><i class="fa fa-envelope"></i> unomontoya@gmail.com</li>
             </ul>
         </div>
     </div>
@@ -163,14 +163,14 @@
             <div class="row">
                 <div class="col-lg-3">
                     <div class="header__logo">
-                        <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='img/Hermanos2.png') }}"
+                        <a href="{{ url_for('home') }}"><img src="/static/img/banner/logo_uno.png"
                                 alt=""></a>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <nav class="header__menu">
                         <ul>
-                            <li class="active"><a href="{{ url_for('home') }}">Inicio</a></li>
+                            <li class="active"><a href="{{ url_for('home') }}" style="color: #1c3794;">Inicio</a></li>
                             <li><a href="{{ url_for('tienda') }}">Tienda</a></li>
                         </ul>
                     </nav>
@@ -236,9 +236,9 @@
                 {% block todasCategorias %}
                 <div class="col-lg-3">
                     <div class="hero__categories">
-                        <div class="hero__categories__all">
+                        <div class="hero__categories__all" style="background: #1c3794;">
                             <i class="fa fa-bars"></i>
-                            <span>Todas las categorías</span>
+                            <span >Todas las categorías</span>
                         </div>
                         {% for categoria in categorias %}
                         <ul class="">
@@ -259,7 +259,7 @@
                                 <input type="text" name="q" placeholder="¿Qué buscas?">
                                 <input type="hidden" name="page" value="{{ page }}">
                                 <!-- Campo oculto para el número de página -->
-                                <button type="submit" class="site-btn">Buscar</button>
+                                <button type="submit" class="site-btn" style="background: #1c3794;">Buscar</button>
                             </form>
                         </div>
                         <div class="hero__search__phone">
@@ -311,7 +311,7 @@
                     <div id="carouselExample" class="carousel slide">
                         <div class="carousel-inner">
                             <div class="carousel-item active">
-                                <img src="/static/img/banner/banner-4.jpg" class="d-block w-100" alt="...">
+                                <img src="/static/img/banner/banner_uno.webp" class="d-block w-100" alt="...">
                             </div>
                             <div class="carousel-item">
                                 <img src="/static/img/banner/banner-3.jpg" class="d-block w-100" alt="...">
@@ -351,7 +351,7 @@
                         <img src="{{url_for('static', filename='/images/Logo-Velaroma-Sin-FondoPEQUE.png')}}" alt="">
                     </div>
                     <form class="text-center custom-form" id="login-form" method="POST">
-                        <h5 class="TittleLogin">Inicio de <span>sesión</span></h5>
+                        <h5 class="TittleLogin">Inicio de <span style="color: #1c3794;">sesión</span></h5>
                         <div class="custom-paragraph">
                             <p>Por favor introduzca sus datos a continuación: </p>
                         </div>
@@ -364,14 +364,14 @@
                             <input type="password" id="passw" name="password" placeholder=" " required="">
                             <label for="input" class="label">Contraseña</label>
                             <div class="lostpass text-lg-end">
-                                <a class="text-lg-start" href="{{ url_for('lostpass') }}">¿Ha olvidado su
+                                <a class="text-lg-start" href="{{ url_for('lostpass') }}" style="color: #1c3794;">¿Ha olvidado su
                                     contraseña?</a>
                             </div>
                             <div class="underline"></div>
                         </div>
 
-                        <button class="site-btn" type="submit">Iniciar sesión</button>
-                        <p class="mt-2">¿No tienes una cuenta? <a href="{{ url_for('register_user') }}">Regístrate</a>
+                        <button class="site-btn" type="submit" style="background: #1c3794;">Iniciar sesión</button>
+                        <p class="mt-2">¿No tienes una cuenta? <a href="{{ url_for('register_user') }}" style="color: #1c3794;">Regístrate</a>
                         </p>
                         <div class="alert alert-danger d-none" id="loginError">Error message here.</div>
                     </form>
@@ -546,13 +546,13 @@
                 <div class="col-lg-3 col-md-6 col-sm-6">
                     <div class="footer__about">
                         <div class="footer__about__logo">
-                            <a href="./index.html"><img src="{{ url_for('static', filename='img/Hermanos2.png') }}"
+                            <a href="./index.html"><img src="/static/img/banner/logo_uno.png"
                                     alt=""></a>
                         </div>
                         <ul>
-                            <li>Dirección: pista el mayoreo, Managua</li>
-                            <li>Teléfono: 8216 2972</li>
-                            <li>Correo: lubrihermanos@gmail.com</li>
+                            <li>Dirección: Montoya</li>
+                            <li>Teléfono: 8785 2972</li>
+                            <li>Correo: unomontoya@gmail.com</li>
                         </ul>
                     </div>
                 </div>
@@ -572,11 +572,14 @@
                     <div class="footer__widget">
                         <h6>Nuestras redes sociales</h6>
                         <div class="footer__widget__social">
-                            <a href="https://www.facebook.com/lubricentro2hermanos"><i class="fa fa-facebook"></i></a>
+                            <a href="https://www.facebook.com/UNOGasolineras?locale=es_LA"><i 
+                                class="fa fa-facebook"></i></a>
                             <a
-                                href="https://l.facebook.com/l.php?u=https%3A%2F%2Fapi.whatsapp.com%2Fsend%3Fphone%3D%252B50557060588%26data%3DARAPZAbLKbDnZwnsHbnTH5A4q6ICQbK738TqAdVTkG1W8RPET3fv7u-nGJFpEZvixh1kLKLY7LQrNbbQ-9SLEql7x-3GFqBWcSHYbmYY6X0RRx-0L3Mhl7FElWPwOwdQoMm5NveebSwvVZEHP8BH50RL3A%26source%3DFB_Page%26app%3Dfacebook%26entry_point%3Dpage_cta%26fbclid%3DIwAR2Z1d2xPl7bFdvdjQJmIShJZTIlCVx6RG-TZkPZ5dKz3AMiJ0KZLkefFz8&h=AT1v57PKZPvQFNzN-INOPylKdJCTPK3sSXpR0qYnrugSZnRxpYphR_Z_Iniuf-0ahI27L0iKlyPwf5vWixcPIfHA2VlRYcynshshyc4K1gTypBpx9RaT34LCKdivLZuPG1hiDr1vmFl0ZmLZmu6ywA"><i
-                                    class="fa fa-whatsapp"></i></a>
-                            <a href="#"><i class="fa fa-instagram"></i></a>
+                                href="#"><i
+                                class="fa fa-whatsapp"></i></a>
+                            <a 
+                                href="https://www.instagram.com/unogasolineras.ni?igsh=NGduM2FmMDZwbG56"><i 
+                                class="fa fa-instagram"></i></a>
                         </div>
                     </div>
                 </div>
@@ -588,7 +591,7 @@
                             <p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
                                 Copyright &copy;
                                 <script>document.write(new Date().getFullYear());</script> Todos los derechos reservados
-                                para Lubicentro dos hermanos
+                                para Uno Gasolinera
                             </p>
                         </div>
                         <div class="footer__copyright__payment"><img src="img/payment-item.png" alt=""></div>
