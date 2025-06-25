@@ -26,15 +26,15 @@
         <div class="custom-forms-wrap">
           <form class="sign-in-form" method="POST">
             <div class="logo">
-              <a href="{{url_for('home')}}"><img src="{{ url_for('static', filename='img/Hermanos2.png') }}"
+              <a href="{{url_for('home')}}"><img src="/static/img/banner/logo_uno.png"
                   alt="easyclass" width="100px" /></a>
-              <h4><a href="{{url_for('home')}}">Lubricentro <span> 2 hermanos</span></a></h4>
+              <h4><a href="{{url_for('home')}}">Gasolinera <span style="color: #1c3794;"> Uno montoya</span></a></h4>
             </div>
 
             <div class="heading">
               <h2>Iniciemos</h2>
               <h6>¿Ya tienes una cuenta?</h6>
-              <a href="{{ url_for('login_user') }}" class="toggle">Inicia Sesión</a>
+              <a href="{{ url_for('login_user') }}" class="toggle" style="color: #1c3794;">Inicia Sesión</a>
             </div>
 
             <div class="actual-form registrarse-actual-form">
@@ -78,7 +78,7 @@
                 <div class="custom-tooltip" id="confirm-password-error"></div>
               </div>
 
-              <button type="button" class="sign-btn toggle" disabled>Registrarme</button>
+              <button type="button" style="background: #1c3794;" class="sign-btn toggle" disabled>Registrarme</button>
 
               <script>
 
@@ -89,14 +89,14 @@
 
           <form action="" autocomplete="off" class="sign-up-form" method="POST">
             <div class="logo">
-              <a href="{{url_for('home')}}"><img src="{{ url_for('static', filename='img/Hermanos2.png') }}"
+              <a href="{{url_for('home')}}"><img src="/static/img/banner/logo_uno.png"
                   alt="easyclass" /></a>
-              <h4><a href="{{url_for('home')}}">Lubricentro<span> 2 hermanos</span></a></h4>
+              <h4><a href="{{url_for('home')}}">Gasolinera<span style="color: #1c3794;"> Uno montoya</span></a></h4>
             </div>
 
             <div class="heading registrarse-heading">
               <h2>Datos del vehiculo</h2>
-              <a class="text-danger" href="" data-toggle="modal" data-target="#modalExplicacion">¿Por qué solicitamos
+              <a href="" data-toggle="modal" data-target="#modalExplicacion" style="color: #1c3794;">¿Por qué solicitamos
                 estos datos?</a>
             </div>
 
@@ -128,7 +128,7 @@
                 <label>Número de motor (opcinoal)</label>
               </div>
 
-              <input type="submit" value="Guardar ahora" id="submitButton" class="btn btn-danger">
+              <input type="submit" style="background: #1c3794;" value="Guardar ahora" id="submitButton" class="btn btn-danger">
               <input type="submit" value="Omitir" id="submitButton" class="btn btn-secondary">
 
               <p class="text mt-2">
@@ -249,7 +249,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">¿Por qué solicitamos estos datos?</h5>
+            <h5 class="modal-title" id="exampleModalLabel" style="color: #1c3794;">¿Por qué solicitamos estos datos?</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
