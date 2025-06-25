@@ -22,6 +22,13 @@ import os
 from multiprocessing import Process, Queue
 from flask import Response, stream_with_context
 from flask_cors import cross_origin
+import os
+import re
+import openai
+from openai import OpenAI
+from flask import request, jsonify
+from datetime import datetime
+from fuzzywuzzy import process, fuzz
 
 
 from database_connection import engine, db_session
@@ -38,6 +45,69 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 # Se instancia la variable global para ser usada en jinja
 app.jinja_env.globals['g'] = g
+
+Prompt_clasificadorDeschos = """
+Eres un clasificador de residuos, todo lo que se te brinde en manera de texto TU LO RETORNARAS A FORMATO JSON LA RESPUESTA
+
+CADA RESIDUO QUE SE TE BRINDE LO BUSCARAS Y ANALIZARÁS PARA PODER IDENTIFICAR LAS MARCAS DE ESOS PRODUCTOS Y ASÍ PODER DEDUCIR EL TIPO DE RESIDUO QUE ES.
+
+POR EJEMPLO BICOLA PUEDE QUE SEA BIG COLA
+
+ESTE SON LOS LOS TIPOS EN QUE TE BASARAS PARA CLASIFICAR PARA FORMAR EL JSON:
+
+CLASIFICACIÓN DE LOS RESIDUOS
+Botellas plásticas:
+Botella de Gatored : 5 Unidades
+
+Vidrio:
+Botellas de Cocacola de vidrio: 1 Unidad
+
+Botellas plásticas: Envases hechos de plástico, generalmente usados para contener líquidos como agua, refrescos, y otros tipos de bebidas.
+
+Tapas plásticas: Tapas o tapas a presión hechas de plástico, comúnmente utilizadas para cerrar botellas plásticas y otros envases.
+
+Vidrio: Material inorgánico duro y frágil, utilizado en botellas, frascos, ventanas, etc. Incluye tanto vidrio reciclable (transparente, verde, ámbar) como vidrio no reciclable (espejos, vidrio de ventanas).
+
+Luminarias (Bujías, lámparas, etc.): Dispositivos que emiten luz, como bombillas, lámparas fluorescentes, y otros componentes de iluminación.
+
+Llantas: Neumáticos usados de vehículos, generalmente de caucho, que pueden ser reciclados o reutilizados.
+
+Papel y cartón: Materiales hechos a partir de pulpa de madera, utilizados en productos como periódicos, cajas, papeles de oficina, etc.
+
+Aluminio: Metal ligero y resistente, utilizado en latas de bebidas, papel de aluminio, y otros productos.
+
+Otros plásticos: Plásticos que no entran en las categorías anteriores, como envases de yogur, bolsas plásticas, y otros artículos de plástico.
+
+
+LUEGO NECESITO QUE TRADUZCAS A INGLES EL NOMBRE DE LOS PRODUCTOS QUE SE TE BRINDEN PARA PODER CLASIFICARLOS, PERO SU CATEOGORÍA QUIERO QUE SIGA EN ESPAÑOL
+
+
+
+Ejemplo de formato JSON A ENTREGAR:
+{
+    "aluminio": {
+        "englishName": "aluminum",
+        "cantidad": 2,
+        "desechos": {
+            "soda can": 1,
+            "aluminum foil": 1
+        }
+    },
+    "botellasPlasticas": {
+        "englishName": "plastic bottles",
+        "cantidad": 2,
+        "desechos": {
+            "water bottle": 1,
+            "soda bottle": 1
+        }
+    },
+    "noClasificados": ["object1", "obje"]
+}
+
+"""
+
+
+
 
 
 # No puuede ser cambiada esta función, ya que esta función es una palabra reservada
@@ -136,6 +206,11 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+
+# Límite diario de mensajes
+message_count = 0
+MAX_MESSAGES = 12
+last_interaction_date = datetime.now().date()
 
 # Route for the home page
 @app.route('/', methods=['GET', 'POST'])
@@ -894,31 +969,51 @@ def login_user():
     if not email or not password:
         return jsonify({'success': False, 'error': 'Debes completar todos los campos para continuar.'})
 
-    # Verifica las credenciales en la base de datos
     db = connectionBD()
     cursor = db.cursor(dictionary=True)
-    cursor.execute(
-        'SELECT * FROM usuarios_clientes WHERE correo = %s', (email,))
-    user_row = cursor.fetchone()
 
-    cursor.close()
-    db.close()
+    try:
+        cursor.execute('SELECT * FROM usuarios_clientes WHERE correo = %s', (email,))
+        user_row = cursor.fetchone()
 
-    if user_row and check_password_hash(user_row['Contraseña'], password):
-        session['usuariosClientesId'] = user_row['usuariosClientesId']
-        session['Nombres'] = user_row['Nombres']
-        db = connectionBD()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("""UPDATE estado_conexion
-SET estado = CASE
-               WHEN usuariosClientesId = '%s' THEN 1
-               ELSE 0
-            END;""", (session['usuariosClientesId'],))
-        db.commit()
+        if user_row and check_password_hash(user_row['Contraseña'], password):
+            session['usuariosClientesId'] = user_row['usuariosClientesId']
+            session['Nombres'] = user_row['Nombres']
+
+            # Obtener datos del vehículo
+            cursor.execute(
+                'SELECT marca, modelo, año FROM vehiculos WHERE usuariosClientesId = %s',
+                (user_row['usuariosClientesId'],)
+            )
+            vehicle_row = cursor.fetchone()
+            if vehicle_row:
+                session["marca"] = vehicle_row['marca']
+                session["modelo"] = vehicle_row['modelo']
+                session["año"] = vehicle_row['año']
+
+            # Actualizar estado_conexion
+            cursor.execute("""
+                UPDATE estado_conexion
+                SET estado = CASE
+                    WHEN usuariosClientesId = %s THEN 1
+                    ELSE 0
+                END;
+            """, (session['usuariosClientesId'],))
+
+            session['chat_history'] = []
+            session['message_count'] = 0
+            session['last_interaction_date'] = datetime.now().date().isoformat()
+
+            db.commit()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Las credenciales ingresadas son incorrectas.'})
+    except Exception as e:
+        print("Error durante login_user:", e)
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'})
+    finally:
         cursor.close()
-        return jsonify({'success': True})
-    else:
-        return jsonify({'success': False, 'error': 'Las credenciales ingresadas no son válidas.'}), print("Error chele")
+        db.close()
 
 
 @app.route('/obtener_contenido_carrito')
@@ -1752,6 +1847,7 @@ WHERE usuariosClientesId = '%s'""", (session['usuariosClientesId'],))
     cursor.close()
     session.pop('usuariosClientesId', None)
     session.pop('Nombres', None)
+    session.clear()
     print("Sesión cerrada exitosamente")
     return redirect(url_for('home'))
 
@@ -1765,6 +1861,201 @@ def Cerrar_Sesion_Sistema():
     session.pop('rol', None)
 
     return redirect(url_for('login_system'))
+
+
+
+
+
+####### CHATOBT ###########
+
+#i Inicializar cliente OpenAI moderno
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+
+
+
+# Función para generar respuestas del chatbot con validación de autenticación
+def generate_chatbot_response():
+    # Determinar estado de autenticación y obtener datos de sesión
+    if 'usuariosClientesId' in session:
+        auth_data = {
+            'authenticated': True,
+            'user_name': session.get('Nombres', ''),
+            'car_brand': session.get('marca', ''),
+            'car_model': session.get('modelo', ''),
+            'car_year': session.get('año', '')
+        }
+    else:
+        auth_data = {
+            'authenticated': False,
+            'user_name': '',
+            'car_brand': '',
+            'car_model': '',
+            'car_year': ''
+        }
+
+    # Construir el prompt dinámico
+    prompt = f"""
+Actúa como chatbot oficial de GASOLINERA UNO en Nicaragua. Eres "UNO Asistente", un asistente virtual experto en combustibles y mantenimiento vehicular.
+
+**Contexto actual:**
+- Autenticado: {'Sí' if auth_data['authenticated'] else 'No'}
+- Nombre: {auth_data['user_name'] or 'No disponible'}
+- Vehículo: {auth_data['car_brand'] or ''} {auth_data['car_model'] or ''} {auth_data['car_year'] or ''}
+
+**Reglas estrictas:**
+1. {"SI el usuario ESTÁ AUTENTICADO:" if auth_data['authenticated'] else "SI el usuario NO ESTÁ AUTENTICADO:"}
+   {"a) Usa siempre el nombre del usuario en las respuestas" if auth_data['authenticated'] else "a) NO mencionar el nombre del usuario"}
+   {"b) Proporciona consejos personalizados para su vehículo" if auth_data['authenticated'] and auth_data['car_brand'] else "b) NO dar consejos específicos sobre vehículos"}
+   {"c) Si no tiene vehículo registrado: ofrece ayuda para registrarlo" if auth_data['authenticated'] and not auth_data['car_brand'] else "c) Invitar a iniciar sesión para consejos personalizados"}
+
+2. Información verídica:
+   - Precios actuales: Regular C$56.20, Premium C$61.75, Diésel C$44.30
+   - Promociones: Jueves de Lubricantes (15% descuento)
+   - Servicios: Lavado express (C$120), chequeo de presión gratis
+
+3. Tono:
+   - {"Saludo inicial: ¡Buenas, {nombre}!" if auth_data['authenticated'] else "Saludo inicial: ¡Qué onda!"}
+   - Expresiones nicaragüenses
+   - Emojis estratégicos (máximo 1 por mensaje)
+
+**Ejemplos de respuestas válidas:**
+- {"Usuario autenticado sin vehículo pregunta: '¿Qué gasolina usar?' → '¡Buenas, {nombre}! ¿Ya registraste tu vehículo? Así te damos consejos personalizados. Mientras, Regular está a C$56.20 😊'" if auth_data['authenticated'] else ""}
+- {"Usuario autenticado con vehículo pregunta: 'Recomiéndame mantenimiento' → '¡Al tiro, {nombre}! Para tu {marca} {modelo}: 1) Cambio de aceite cada 5,000 km 2) Rotar llantas cada 10,000 km. ¿Agendamos?'" if auth_data['authenticated'] and auth_data['car_brand'] else ""}
+- {"Usuario NO autenticado pregunta sobre su carro → '¡Qué onda! Para consejos de tu vehículo, necesitás iniciar sesión.'" if not auth_data['authenticated'] else ""}
+"""
+    
+    return prompt
+
+
+
+# Función para consultar centros de acopio
+def get_nearest_recycling_centers():
+    return "Estos son los centros de acopio chele"
+
+# Preguntas predefinidas
+predefined_questions = {
+    'horarios': [
+        'cuales son sus horarios',
+        'a que hora trabajan',
+        'cual es el horario de atencion',
+        'cuando estan abiertos',
+        'a que hora abren',
+        'horario de trabajo',
+        'horarios',
+        'cuando trabajan',
+    ],
+    'centros_acopio': [
+        'donde estan los centros de acopio',
+        'centros de acopio cercanos',
+        'donde puedo llevar reciclaje',
+        'lugares para reciclar',
+        'puntos de acopio',
+    ],
+    'contacto': [
+        'como contactar',
+        'numero de contacto',
+        'cual es su numero de telefono',
+        'contacto',
+        'telefono',
+    ]
+}
+
+# Función para detectar preguntas frecuentes
+def handle_predefined_questions(user_message):
+    for key, phrases in predefined_questions.items():
+        for phrase in phrases:
+            score = fuzz.token_sort_ratio(user_message.lower(), phrase)
+            if score >= 70:
+                if key == 'horarios':
+                    return 'Nuestro horario es de 8 AM a 6 PM, de lunes a sábado.'
+                elif key == 'centros_acopio':
+                    return get_nearest_recycling_centers()
+                elif key == 'contacto':
+                    return 'Puedes contactarnos al número: (505) 1234-5678.'
+    return None
+
+def chatbot_message(user_message):
+    try:
+        current_date = datetime.now().date().isoformat()
+
+        # Inicializar historial y contador si no existen en sesión
+        if 'chat_history' not in session:
+            session['chat_history'] = []
+        if 'message_count' not in session:
+            session['message_count'] = 0
+        if 'last_interaction_date' not in session or session['last_interaction_date'] != current_date:
+            session['message_count'] = 0
+            session['last_interaction_date'] = current_date
+
+        if session['message_count'] >= MAX_MESSAGES:
+            return jsonify({'error': 'Has alcanzado el límite de 12 mensajes por hoy.'}), 403
+
+        # Agregar mensaje del sistema si es el primer mensaje
+        if not any(msg["role"] == "system" for msg in session['chat_history']):
+            promptGenerado = generate_chatbot_response()
+            session['chat_history'].append({
+                "role": "system",
+                "content": promptGenerado
+            })
+
+        # Preguntas frecuentes
+        predefined_response = handle_predefined_questions(user_message)
+        if predefined_response:
+            session['message_count'] += 1
+            return jsonify({
+                'reply': predefined_response,
+                'current_count': session['message_count'],
+                'total_messages': MAX_MESSAGES
+            })
+
+        # Agregar mensaje del usuario
+        session['chat_history'].append({
+            "role": "user",
+            "content": user_message
+        })
+
+        chat_completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=session['chat_history']
+        )
+
+        bot_reply = chat_completion.choices[0].message.content.strip()
+
+        session['chat_history'].append({
+            "role": "assistant",
+            "content": bot_reply
+        })
+
+        session['message_count'] += 1
+
+        return jsonify({
+            'reply': bot_reply,
+            'current_count': session['message_count'],
+            'total_messages': MAX_MESSAGES
+        })
+
+    except Exception as e:
+        print(e)
+        return 'Error en la comunicación con el servidor. Por favor, intenta de nuevo más tarde.', 500
+
+
+@app.route('/api/ecochat', methods=['POST'])
+def chat():
+
+    user_message = request.json.get('message')
+
+    try:
+
+        result = chatbot_message(user_message)
+
+        return result
+    
+    except Exception as e:
+        print(e)
+        return 'Error en la comunicación con el servidor. Por favor, intenta de nuevo más tarde.'
+    
+
 
 
 # Print

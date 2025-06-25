@@ -22,6 +22,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/owl.carousel.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/slicknav.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ url_for('static', filename='sass/sassU/style.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" type="text/css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet" />
 
     <script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
 
@@ -37,24 +41,38 @@
         .section-title h2:after {
             background: #1c3794 !important;
         }
-        .header__menu ul li a:hover{
+
+        .header__menu ul li a:hover {
             color: #1c3794 !important;
         }
-        .input-container .label{
+
+        .input-container .label {
             color: #1c3794 !important;
         }
-        .input-container input:focus  .label  {
+
+        .input-container input:focus .label {
             color: #1c3794 !important;
         }
-        .input-container input:focus ~ .label {
+
+        .input-container input:focus~.label {
             color: #1c3794 !important;
         }
-        .input-pass .underline{
+
+        .input-pass .underline {
             background-color: #1c3794 !important;
         }
-        .input-container .underline{
+
+        .input-container .underline {
             background-color: #1c3794 !important;
         }
+
+        .badge {
+    --bs-badge-padding-x: 0.65em;
+    --bs-badge-padding-y: 0.35em;
+    --bs-badge-font-size: 0.75em;
+    --bs-badge-font-weight: 700;
+    --bs-badge-color: #dd2222;
+}
     </style>
 </head>
 
@@ -356,6 +374,46 @@
     <!-- Hero Section End -->
     {% block body %}{% endblock %}
 
+    <!-- CHATBOT -->
+    <!-- Contenedor de Bootstrap -->
+    <div class="container container-ecochat">
+        <!-- Contenido de tu página -->
+
+        <!-- Botón del Chatbot -->
+        <div class="chatbot-icon">
+            <i class='bx bx-leaf'></i>
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+
+
+    <div class="chatbot">
+        <div class="header_ecochat">
+            <div class="chatbot-icon_in_chat">
+                <i class='bx bx-leaf'></i>
+            </div>
+            <h2 class="ml-2">OilWise</h2>
+            <span class="close-btn material-symbols-outlined">close</span>
+        </div>
+        <ul class="chatbox">
+            <li class="chat incoming">
+                <span class="bx bx-leaf"></span>
+                <p>Hola 👋<br>¿En qué puedo ayudarte hoy?</p>
+
+
+            </li>
+        </ul>
+        <div class="chat-input">
+            <textarea placeholder="Escribe un mensaje..." spellcheck="false" required></textarea>
+            <span id="send-btn" class="material-symbols-rounded">send</span>
+        </div>
+    </div>
+
+    <!--  -->
+
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+
     <!-- Modal de inicio de sesión -->
     <div class="modal fade" id="iniciosesion2" tabindex="-1" aria-labelledby="iniciosesion2Title" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -617,25 +675,7 @@
 
     <!-- Js Plugins -->
 
-    <script type="text/javascript">
-        var usuario = {
-            primer_nombre: '{{ primer_nombre }}',
-            primer_apellido: '{{ primer_apellido }}'
-        };
 
-        (function (d, t) {
-            var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
-            v.onload = function () {
-                window.voiceflow.chat.load({
-                    verify: { projectID: '6524c70f228c8900072400e6' },
-                    url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production',
-                    usuario: usuario
-                });
-            }
-            v.src = "https://cdn.voiceflow.com/widget/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
-        })(document, 'script');
-    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
