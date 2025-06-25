@@ -18,6 +18,24 @@
     #carouselExampleCaptions {
       display: none;
     }
+
+    .custom-carousel {
+      background-color: #1c3794 !important;
+    }
+
+    .custom-tooltip {
+      background-color: #1c3794 !important;
+    }
+    .custom-tooltip::after{
+      border-color: #1c3794 !important;
+    }
+    input:required:valid{
+     border-bottom-color: #1c3794 !important;
+    }
+
+    input:required:valid + label{
+      color: #1c3794 !important;
+    }
   </style>
 
   <main>
@@ -26,15 +44,12 @@
         <div class="custom-forms-wrap">
           <form class="sign-in-form" method="POST">
             <div class="logo">
-              <a href="{{url_for('home')}}"><img src="/static/img/banner/logo_uno.png"
-                  alt="easyclass" width="100px" /></a>
-              <h4><a href="{{url_for('home')}}">Gasolinera <span style="color: #1c3794;"> Uno montoya</span></a></h4>
+              <a href="{{url_for('home')}}"><img src="/static/img/banner/gasolineras_uno.png" alt="easyclass"
+                  width="100px" /></a>
             </div>
 
             <div class="heading">
               <h2>Iniciemos</h2>
-              <h6>¿Ya tienes una cuenta?</h6>
-              <a href="{{ url_for('login_user') }}" class="toggle" style="color: #1c3794;">Inicia Sesión</a>
             </div>
 
             <div class="actual-form registrarse-actual-form">
@@ -89,14 +104,14 @@
 
           <form action="" autocomplete="off" class="sign-up-form" method="POST">
             <div class="logo">
-              <a href="{{url_for('home')}}"><img src="/static/img/banner/logo_uno.png"
-                  alt="easyclass" /></a>
+              <a href="{{url_for('home')}}"><img src="/static/img/banner/logo_uno.png" alt="easyclass" /></a>
               <h4><a href="{{url_for('home')}}">Gasolinera<span style="color: #1c3794;"> Uno montoya</span></a></h4>
             </div>
 
             <div class="heading registrarse-heading">
               <h2>Datos del vehiculo</h2>
-              <a href="" data-toggle="modal" data-target="#modalExplicacion" style="color: #1c3794;">¿Por qué solicitamos
+              <a href="" data-toggle="modal" data-target="#modalExplicacion" style="color: #1c3794;">¿Por qué
+                solicitamos
                 estos datos?</a>
             </div>
 
@@ -128,7 +143,8 @@
                 <label>Número de motor (opcinoal)</label>
               </div>
 
-              <input type="submit" style="background: #1c3794;" value="Guardar ahora" id="submitButton" class="btn btn-danger">
+              <input type="submit" style="background: #1c3794;" value="Guardar ahora" id="submitButton"
+                class="btn btn-danger">
               <input type="submit" value="Omitir" id="submitButton" class="btn btn-secondary">
 
               <p class="text mt-2">
@@ -141,8 +157,7 @@
 
         <div class="custom-carousel">
           <div class="images-wrapper">
-            <img src="{{ url_for('static', filename= './img/registro.png')}} " class="image img-1 show"
-              alt="" />
+            <img src="{{ url_for('static', filename= './img/registro.png')}} " class="image img-1 show" alt="" />
             <img src="{{ url_for('static', filename= './img/lubri_3.png')}} " class="image img-2" alt="" />
           </div>
 
@@ -249,7 +264,8 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel" style="color: #1c3794;">¿Por qué solicitamos estos datos?</h5>
+            <h5 class="modal-title" id="exampleModalLabel" style="color: #1c3794;">¿Por qué solicitamos estos datos?
+            </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>

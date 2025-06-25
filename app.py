@@ -650,7 +650,11 @@ def backup_progress():
 @app.route('/restore_status')
 def restore_status():
     try:
-        user_id = session.get("user_id")
+        # Verificar si 'user_id' está en la sesión
+        if 'user_id' not in session:
+            user_id = 1  # Valor por defecto si no está en la sesión
+        else:
+            user_id = session.get('user_id')  # Obtenerlo de la sesión
         if not user_id:
             return jsonify({
                 'progress': 0,
@@ -682,14 +686,21 @@ def restore_status():
 def restore_progress():
     try:
         file_url = request.args.get('file_url')
-        user_id = session.get("user_id")
         
+        # Verificar si 'user_id' está en la sesión
+        if 'user_id' not in session:
+            user_id = 1  # Valor por defecto si no está en la sesión
+        else:
+            user_id = session.get('user_id')  # Obtenerlo de la sesión
+        
+        # Verificar si file_url está presente
         if not file_url:
             return jsonify({
                 'started': False,
                 'error': 'No se proporcionó URL del archivo'
             }), 400
             
+        # Verificar si user_id es válido
         if not user_id:
             return jsonify({
                 'started': False,
